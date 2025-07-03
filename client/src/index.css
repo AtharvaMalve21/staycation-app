@@ -1,0 +1,45 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: "Outfit", sans-serif;
+}
+
+.active {
+  background-color: #f43f5e; /* rose-500 */
+  color: white;
+  border-color: transparent;
+}
+body {
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-input {
+  @apply w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-400;
+}
+
+.form-textarea {
+  @apply w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring focus:border-blue-400;
+}
+
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9; /* gray-100 */
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #3b83f600; /* blue-500 */
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #f800571e; /* blue-600 */
+}

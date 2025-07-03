@@ -1,0 +1,33 @@
+const express = require("express");
+const router = express.Router();
+
+const {
+  getAllUsers,
+  deleteUser,
+  getAllPlaces,
+  viewPlace,
+  getAllBookings,
+  verifyPlace,
+  getStats,
+  filterUserByGender,
+  searchUser,
+  changeUserRole,
+  getUserReviews,
+} = require("../controllers/adminController");
+
+const { isAuthenticated, isAuthorized } = require("../middleware/auth");
+
+router.get("/users", isAuthenticated, isAuthorized, getAllUsers);
+router.delete("/users/:id", isAuthenticated, isAuthorized, deleteUser);
+router.get("/places", isAuthenticated, isAuthorized, getAllPlaces);
+router.get("/reviews", isAuthenticated, isAuthorized, getUserReviews);
+router.get("/admin/places/:id", isAuthenticated, isAuthorized, viewPlace);
+router.get("/bookings", isAuthenticated, isAuthorized, getAllBookings);
+router.put("/verify-place/:id", isAuthenticated, isAuthorized, verifyPlace);
+router.get("/stats", isAuthenticated, isAuthorized, getStats);
+router.get("/users/:filter", isAuthenticated, isAuthorized, filterUserByGender);
+router.get("/:search", isAuthenticated, isAuthorized, searchUser);
+router.patch("/users/:id/role", isAuthenticated, isAuthorized, changeUserRole);
+
+
+module.exports = router;
