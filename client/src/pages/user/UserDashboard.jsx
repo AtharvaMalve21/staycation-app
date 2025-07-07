@@ -1,20 +1,19 @@
 import React, { useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
+import { BookingContext } from "../../context/BookingContext";
+import { LoaderContext } from "../../context/LoaderContext"; // ✅ import loader
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import {
-  CalendarDaysIcon,
-  HomeModernIcon,
-  UserCircleIcon,
   EnvelopeIcon,
   PhoneIcon,
 } from "@heroicons/react/24/outline";
-import { BookingContext } from "../../context/BookingContext";
 
 const UserDashboard = () => {
   const { user, isLoggedIn, setUser, setIsLoggedIn } = useContext(UserContext);
   const { bookings, setBookings } = useContext(BookingContext);
+  const { setLoading } = useContext(LoaderContext); // ✅ use loader
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
@@ -39,22 +38,24 @@ const UserDashboard = () => {
 
   const fetchBookingDetails = async () => {
     try {
+      setLoading(true); // ✅ start loader
+      const { data } = await axios.get(`${URI}/api/booking`, {
+        withCredentials: true,
+      });
 
-      const { data } = await axios.get(`${URI}/api/booking`, { withCredentials: true });
-
-      console.log(data);
       if (data.success) {
         setBookings(data.data);
-        console.log(data.message);
       }
-
     } catch (err) {
-      console.log(err)
+      console.log(err);
+    } finally {
+      setLoading(false); // ✅ stop loader
     }
-  }
+  };
 
   const logoutUserAccount = async () => {
     try {
+      setLoading(true); // ✅ start loader
       const { data } = await axios.get(URI + "/api/auth/logout", {
         withCredentials: true,
       });
@@ -67,19 +68,19 @@ const UserDashboard = () => {
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Logout failed");
+    } finally {
+      setLoading(false); // ✅ stop loader
     }
   };
 
-
   useEffect(() => {
-    fetchBookingDetails();
-  }, [isLoggedIn])
+    if (isLoggedIn) fetchBookingDetails();
+  }, [isLoggedIn]);
 
   return (
     <div className="min-h-[calc(100vh-90px)] bg-blue-50 px-4 md:px-10 py-12 text-gray-800">
       <div className="max-w-6xl mx-auto space-y-12">
-
-        {/* Welcome Section */}
+        {/* Welcome */}
         <div className="bg-white shadow-md rounded-xl p-6 space-y-4">
           <h2 className="text-2xl font-semibold text-gray-800">
             Welcome back, {user?.name} 👋
@@ -87,15 +88,12 @@ const UserDashboard = () => {
           <p className="text-gray-600">Plan your next stay with ease.</p>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-2">
-            {/* Explore Stays */}
             <Link
               to="/places"
               className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition text-center"
             >
               Explore Stays
             </Link>
-
-            {/* My Bookings */}
             <Link
               to="/account/bookings"
               className="inline-flex items-center justify-center gap-2 bg-indigo-100 text-indigo-700 px-5 py-2 rounded-lg hover:bg-indigo-200 transition"
@@ -119,16 +117,12 @@ const UserDashboard = () => {
           </div>
         </div>
 
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {/* ... keep as is */}
-        </div>
-
-        {/* Profile Overview */}
+        {/* Profile Info */}
         <div className="bg-white p-6 rounded-xl shadow-md flex flex-col sm:flex-row items-center gap-6">
           <img
-            src={user?.profilePic ? `${URI}/${user.profilePic}` : "/default-profile.png"}
+            src={
+              user?.profilePic ? `${URI}/${user.profilePic}` : "/default-profile.png"
+            }
             alt="Profile"
             className="w-24 h-24 rounded-full object-cover border border-gray-300 shadow-sm"
           />
@@ -160,10 +154,9 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Bookings */}
+        {/* Bookings Section */}
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4">📅 Your Bookings</h2>
-
           {bookings.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -182,12 +175,19 @@ const UserDashboard = () => {
                       <td className="px-4 py-2 font-medium">{booking.place.title}</td>
                       <td className="px-4 py-2">{booking.place.address}</td>
                       <td className="px-4 py-2">
-                        {new Date(booking.checkIn).toLocaleDateString()} - {new Date(booking.checkOut).toLocaleDateString()}
+                        {new Date(booking.checkIn).toLocaleDateString()} -{" "}
+                        {new Date(booking.checkOut).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-2 text-green-600 font-semibold">₹{booking.totalPrice}</td>
+                      <td className="px-4 py-2 text-green-600 font-semibold">
+                        ₹{booking.totalPrice}
+                      </td>
                       <td className="px-4 py-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium 
-                          ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === "confirmed"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                            }`}
+                        >
                           {booking.status}
                         </span>
                       </td>

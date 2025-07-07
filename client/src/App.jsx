@@ -25,6 +25,8 @@ import AdminBooking from "./pages/admin/AdminBookings.jsx";
 import AdminViewPlace from "./pages/admin/AdminViewPlace.jsx";
 import AddPlace from "./pages/admin/AddPlace.jsx";
 import AdminReviews from "./pages/admin/AdminReviews.jsx";
+import EditProfile from "./pages/EditProfile.jsx";
+import ViewAdminBooking from "./pages/admin/ViewAdminBooking.jsx";
 
 const App = () => {
 
@@ -110,6 +112,12 @@ const App = () => {
           </PrivateRoute>
         } />
 
+        <Route path="/account/profile/edit" element={
+          <PrivateRoute allowedRoles={["user", "admin"]}>
+            <EditProfile />
+          </PrivateRoute>
+        } />
+
         <Route path="/places/booking/:id" element={
           <PrivateRoute allowedRoles={["user"]}>
             <UserDashboard />
@@ -160,6 +168,12 @@ const App = () => {
           </PrivateRoute>
         } />
 
+        <Route path="/admin/bookings/:id" element={
+          <PrivateRoute allowedRoles={["admin"]} >
+            <ViewAdminBooking />
+          </PrivateRoute>
+        } />
+
         <Route path="/admin/reviews" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <AdminReviews />
@@ -170,7 +184,7 @@ const App = () => {
           <PrivateRoute allowedRoles={["admin"]} >
             <AddPlace />
           </PrivateRoute>
-        }  />
+        } />
 
       </Route>
     </Routes>

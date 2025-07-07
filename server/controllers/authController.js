@@ -9,6 +9,8 @@ const {
 } = require("../utils/resetPasswordOTPTemplate");
 const crypto = require("crypto");
 dotenv.config();
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
 
 // Password strength validation function
 const isStrongPassword = (password) => {
@@ -65,11 +67,19 @@ exports.register = async (req, res) => {
       await bcrypt.genSalt(10)
     );
 
+    //upload profilePic to cloudinary
+    const cloudinaryResponse = await cloudinary.uploader.upload(profilePic, {
+      folder: "stay-cation",
+    });
+
+    //unlink from uploads folder
+    fs.unlinkSync(profilePic);
+
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      profilePic,
+      profilePic: cloudinaryResponse,
       gender,
       role,
       phone,

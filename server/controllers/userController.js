@@ -4,13 +4,15 @@ const Booking = require("../models/bookingModel");
 
 const Review = require("../models/reviewModel");
 
+const fs = require("fs");
+
+const cloudinary = require("cloudinary").v2;
+
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const user = await User.findById(userId).select(
-      "-password -verificationCode -resetPasswordCode"
-    );
+    const user = await User.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -39,9 +41,7 @@ exports.getUserProfile = async (req, res) => {
 
 exports.updateUserProfile = async (req, res) => {
   try {
-    // Authenticated user ID from token
     const userId = req.user._id;
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -52,9 +52,8 @@ exports.updateUserProfile = async (req, res) => {
     }
 
     const { name, email, gender, phone } = req.body;
-    const profilePic = req.file?.path;
 
-    // Optional: Validate phone number
+    // ✅ Validate phone number
     if (phone && phone.length !== 10) {
       return res.status(400).json({
         success: false,
@@ -62,7 +61,7 @@ exports.updateUserProfile = async (req, res) => {
       });
     }
 
-    // Optional: Prevent changing email without verification
+    // ✅ Prevent email change
     if (email && email !== user.email) {
       return res.status(400).json({
         success: false,
@@ -70,14 +69,52 @@ exports.updateUserProfile = async (req, res) => {
       });
     }
 
-    // Update user fields
+    // ✅ Handle profile picture upload (Cloudinary)
+    if (req.file?.path) {
+      // 🔥 Delete old image from Cloudinary if exists
+      if (user.profilePic?.public_id) {
+        try {
+          await cloudinary.uploader.destroy(user.profilePic.public_id);
+        } catch (err) {
+          console.warn("Failed to delete old Cloudinary image:", err.message);
+        }
+      }
+
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "stay-cation",
+      });
+
+      // 🔍 Safety check
+      if (!result.secure_url || !result.public_id) {
+        return res.status(500).json({
+          success: false,
+          message: "Cloudinary upload failed. Please try again.",
+        });
+      }
+
+      // 🧹 Delete local file
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (error) {
+        console.warn("Temp file deletion failed:", error.message);
+      }
+
+      // ✅ Update profilePic with Cloudinary data
+      user.profilePic = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+    }
+
+    // ✅ Update other fields
     user.name = name || user.name;
     user.gender = gender || user.gender;
     user.phone = phone || user.phone;
-    user.profilePic = profilePic || user.profilePic;
 
+    // 📥 Save updated user
     await user.save();
 
+    // 🔒 Return safe user data
     const safeUserData = {
       _id: user._id,
       name: user.name,
@@ -96,6 +133,7 @@ exports.updateUserProfile = async (req, res) => {
       data: safeUserData,
     });
   } catch (err) {
+    console.error("🔥 Profile update error:", err); // 🔍 log full error
     return res.status(500).json({
       success: false,
       message: "Failed to update profile. Please try again later.",
@@ -116,13 +154,18 @@ exports.deleteUserProfile = async (req, res) => {
       });
     }
 
-    // Delete user
+    // 1. Delete profile picture from Cloudinary if exists
+    if (user.profilePic?.public_id) {
+      await cloudinary.uploader.destroy(user.profilePic.public_id);
+    }
+
+    // 2. Delete user
     await user.deleteOne();
 
-    // Delete all bookings by the user
+    // 3. Delete all bookings by user
     await Booking.deleteMany({ user: userId });
 
-    // Delete all reviews by the user
+    // 4. Delete all reviews by user
     await Review.deleteMany({ createdBy: userId });
 
     return res.status(200).json({
@@ -130,9 +173,10 @@ exports.deleteUserProfile = async (req, res) => {
       message: "User profile and related data deleted successfully.",
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Server error while deleting profile",
+      error: err.message,
     });
   }
 };

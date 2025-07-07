@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { UserContext } from "../../context/UserContext.jsx";
+import { LoaderContext } from "../../context/LoaderContext.jsx";
+
 
 const VerifyAccount = () => {
   const [otp, setOtp] = useState(new Array(6).fill(""));
-  const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
   const { setIsLoggedIn, user } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext);
 
   const handleChange = (value, index) => {
     if (!isNaN(value)) {
@@ -65,6 +67,7 @@ const VerifyAccount = () => {
 
     try {
       setLoading(true);
+
       const { data } = await axios.post(
         URI + "/api/auth/verify-account",
         { email: user.email, otp: code },
@@ -85,6 +88,7 @@ const VerifyAccount = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-78px)] flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4">
@@ -113,12 +117,10 @@ const VerifyAccount = () => {
 
         <button
           type="submit"
-          disabled={loading}
           className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200 text-sm"
         >
-          {loading ? "Verifying..." : "Verify Account"}
+          Verify Account
         </button>
-
         <p className="text-center text-sm text-gray-600 mt-4">
           Didn't receive the code?{" "}
           <button type="button" className="text-blue-500 hover:underline">

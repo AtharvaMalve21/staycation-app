@@ -20,33 +20,36 @@ const AdminUsers = () => {
   const [selectedGender, setSelectedGender] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const URI = import.meta.env.VITE_BACKEND_URI;
   const genders = ["Male", "Female"];
 
   useEffect(() => {
-    fetchUsers();
-  }, [isLoggedIn]);
-
-  useEffect(() => {
     if (selectedGender) {
       fetchUsersByGender(selectedGender);
+    } else {
+      fetchUsers();
     }
-  }, [selectedGender]);
+  }, [isLoggedIn, selectedGender]);
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/admin/users`, {
         withCredentials: true,
       });
       if (data.success) setUsers(data.data);
     } catch (err) {
       console.error(err.response?.data?.message || "Error fetching users");
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchUsersByGender = async (gender) => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/admin/users/filter`, {
         params: { query: gender },
         withCredentials: true,
@@ -54,6 +57,8 @@ const AdminUsers = () => {
       if (data.success) setUsers(data.data);
     } catch (err) {
       console.error(err.response?.data?.message || "Error filtering users");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,7 +106,6 @@ const AdminUsers = () => {
 
   return (
     <div className="min-h-screen pb-10">
-      {/* Top Horizontal Admin Navigation */}
       <AdminNav />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -127,18 +131,19 @@ const AdminUsers = () => {
             </button>
           ))}
           <button
-            onClick={() => {
-              setSelectedGender("");
-              fetchUsers();
-            }}
+            onClick={() => setSelectedGender("")}
             className="px-5 py-2.5 rounded-full text-sm font-medium bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 transition"
           >
             Clear Filter
           </button>
         </div>
 
-        {/* User Grid */}
-        {users.length > 0 ? (
+        {/* User Grid or Loader */}
+        {loading ? (
+          <p className="text-center text-gray-500 text-lg font-medium mt-10">
+            🔄 Loading users...
+          </p>
+        ) : users.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {users.map((user) => (
               <div

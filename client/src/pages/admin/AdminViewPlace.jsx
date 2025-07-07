@@ -1,4 +1,3 @@
-// ViewPlace.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -9,22 +8,16 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import toast from "react-hot-toast";
-import BookingWidget from "../../components/BookingWidget.jsx";
+
 
 const CustomNextArrow = ({ onClick }) => (
-  <button
-    className="absolute top-1/2 right-3 transform -translate-y-1/2 z-10 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition"
-    onClick={onClick}
-  >
+  <button className="absolute top-1/2 right-3 transform -translate-y-1/2 z-10 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition" onClick={onClick}>
     <ChevronRight className="w-6 h-6" />
   </button>
 );
 
 const CustomPrevArrow = ({ onClick }) => (
-  <button
-    className="absolute top-1/2 left-3 transform -translate-y-1/2 z-10 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition"
-    onClick={onClick}
-  >
+  <button className="absolute top-1/2 left-3 transform -translate-y-1/2 z-10 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition" onClick={onClick}>
     <ChevronLeft className="w-6 h-6" />
   </button>
 );
@@ -34,60 +27,42 @@ const AdminViewPlace = () => {
   const { isLoggedIn } = useContext(UserContext);
   const { reviews, setReviews } = useContext(ReviewsContext);
   const [place, setPlace] = useState(null);
-  const [body, setBody] = useState("");
-  const [rating, setRating] = useState("");
+  const [loadingPlace, setLoadingPlace] = useState(true);
+  const [loadingReviews, setLoadingReviews] = useState(true);
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
-  const fetchPlaceDetails = async () => {
-    try {
-      const { data } = await axios.get(`${URI}/api/places/${id}`);
-      if (data.success) setPlace(data.data);
-    } catch (err) {
-      toast.error(err.response?.data.message || "Error fetching place details.");
-      navigate("/login");
-    }
-  };
-
-  const fetchReviews = async () => {
-    try {
-      const { data } = await axios.get(`${URI}/api/reviews/${id}`, { withCredentials: true });
-      if (data.success) setReviews(data.data);
-    } catch (err) {
-      toast.error(err.response?.data.message || "Error fetching reviews.");
-    }
-  };
-
-  const createReview = async () => {
-    try {
-      const { data } = await axios.post(`${URI}/api/reviews/${id}`, { body, rating }, {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true
-      });
-      if (data.success) {
-        setReviews([...reviews, data.data]);
-        setBody("");
-        setRating("");
-        toast.success(data.message);
+  useEffect(() => {
+    const fetchPlaceDetails = async () => {
+      try {
+        setLoadingPlace(true);
+        const { data } = await axios.get(`${URI}/api/places/${id}`);
+        if (data.success) setPlace(data.data);
+      } catch (err) {
+        toast.error(err.response?.data.message || "Error fetching place details.");
+        navigate("/login");
+      } finally {
+        setLoadingPlace(false);
       }
-    } catch (err) {
-      toast.error(err.response?.data.message || "Error creating review.");
-    }
-  };
+    };
 
-  const deleteReview = async (reviewId) => {
-    try {
-      const { data } = await axios.delete(`${URI}/api/reviews/${id}/${reviewId}`, {
-        withCredentials: true,
-      });
-      if (data.success) {
-        setReviews(reviews.filter((r) => r._id !== reviewId));
-        toast.success(data.message);
+    const fetchReviews = async () => {
+      try {
+        setLoadingReviews(true);
+        const { data } = await axios.get(`${URI}/api/reviews/${id}`, {
+          withCredentials: true,
+        });
+        if (data.success) setReviews(data.data);
+      } catch (err) {
+        toast.error(err.response?.data.message || "Error fetching reviews.");
+      } finally {
+        setLoadingReviews(false);
       }
-    } catch (err) {
-      toast.error(err.response?.data.message || "Error deleting review.");
-    }
-  };
+    };
+
+    fetchPlaceDetails();
+    fetchReviews();
+  }, [id, isLoggedIn]);
 
   const deletePlace = async () => {
     try {
@@ -95,22 +70,13 @@ const AdminViewPlace = () => {
         withCredentials: true,
       });
       if (data.success) {
-        navigate("/admin/places");
         toast.success(data.message);
+        navigate("/admin/places");
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Error deleting place.");
-      navigate("/");
     }
   };
-
-  useEffect(() => {
-    fetchPlaceDetails();
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    fetchReviews();
-  }, [id]);
 
   const sliderSettings = {
     dots: true,
@@ -123,10 +89,22 @@ const AdminViewPlace = () => {
     prevArrow: <CustomPrevArrow />,
   };
 
-  if (!place) {
-    return <div className="text-center mt-10 text-gray-600">Loading place details...</div>;
+  if (loadingPlace) {
+    return (
+      <div className="text-center mt-20 text-gray-500 text-lg">
+        ⏳ Loading place details...
+      </div>
+    );
   }
-  
+
+  if (!place) {
+    return (
+      <div className="text-center mt-20 text-red-500 font-semibold">
+        ⚠️ Place not found.
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-50 min-h-[calc(100vh-90px)] py-10 px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-10">
@@ -154,13 +132,17 @@ const AdminViewPlace = () => {
           <Slider {...sliderSettings}>
             {place.photos?.map((photo, idx) => (
               <div key={idx}>
-                <img src={`${URI}/${photo}`} alt={`Slide ${idx + 1}`} className="w-full h-[400px] md:h-[500px] object-cover rounded-xl" />
+                <img
+                  src={`${URI}/${photo}`}
+                  alt={`Slide ${idx + 1}`}
+                  className="w-full h-[400px] md:h-[500px] object-cover rounded-xl"
+                />
               </div>
             ))}
           </Slider>
         </div>
 
-        {/* Owner */}
+        {/* Owner Info */}
         <div className="flex items-center gap-4 p-4 border rounded-xl bg-gray-50 shadow-sm">
           <img src={`${URI}/${place.owner.profilePic}`} alt="Owner" className="w-14 h-14 rounded-full object-cover border" />
           <div>
@@ -171,7 +153,7 @@ const AdminViewPlace = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 text-gray-700">
-          {/* Left Content */}
+          {/* Left Section */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <h3 className="font-semibold text-gray-800">Description</h3>
@@ -206,22 +188,26 @@ const AdminViewPlace = () => {
             </div>
           </div>
 
-          {/* Right Column (Reviews) */}
+          {/* Reviews */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-800">Customer Reviews</h2>
-            {reviews.length > 0 ? reviews.map((r) => (
-              <div key={r._id} className="relative border bg-gray-50 rounded-xl p-4 shadow-sm">
-                <p className="text-sm mb-2 mt-2">{r.body}</p>
-                <p className="text-yellow-500 text-sm">⭐ {r.rating}/5</p>
-                <div className="flex items-center gap-3 mt-3">
-                  <img src={`${URI}/${r.createdBy?.profilePic}`} alt="Reviewer" className="w-10 h-10 rounded-full object-cover border" />
-                  <div>
-                    <p className="text-sm font-semibold">{r.createdBy.name}</p>
-                    <p className="text-xs text-gray-500">{r.createdBy.email}</p>
+            {loadingReviews ? (
+              <p className="text-gray-500">🔄 Loading reviews...</p>
+            ) : reviews.length > 0 ? (
+              reviews.map((r) => (
+                <div key={r._id} className="relative border bg-gray-50 rounded-xl p-4 shadow-sm">
+                  <p className="text-sm mb-2 mt-2">{r.body}</p>
+                  <p className="text-yellow-500 text-sm">⭐ {r.rating}/5</p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <img src={`${URI}/${r.createdBy?.profilePic}`} alt="Reviewer" className="w-10 h-10 rounded-full object-cover border" />
+                    <div>
+                      <p className="text-sm font-semibold">{r.createdBy.name}</p>
+                      <p className="text-xs text-gray-500">{r.createdBy.email}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )) : (
+              ))
+            ) : (
               <p className="text-sm text-gray-500">No reviews yet.</p>
             )}
           </div>
@@ -229,7 +215,6 @@ const AdminViewPlace = () => {
       </div>
     </div>
   );
-
 };
 
 export default AdminViewPlace;

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from 'react-router-dom';
+import { LoaderContext } from "../../context/LoaderContext.jsx";
+
 
 
 import OtpInputBoxes from '../../components/OtpInputBoxes';
@@ -14,7 +16,8 @@ const ResetPassword = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [step, setStep] = useState('OTP');
-  const [loading, setLoading] = useState(false);
+  const { setLoading } = useContext(LoaderContext);
+
 
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
@@ -28,17 +31,14 @@ const ResetPassword = () => {
   const resetPassword = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
+      setLoading(true); // ✅ Show global loader
       const { data } = await axios.post(
         URI + "/api/auth/reset-password",
         { email, otp, newPassword, confirmNewPassword },
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
-      console.log(data);
       if (data.success) {
         toast.success(data.message);
         navigate("/login");
@@ -46,9 +46,10 @@ const ResetPassword = () => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Reset failed");
     } finally {
-      setLoading(false);
+      setLoading(false); // ✅ Hide loader
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-100 to-blue-200 px-4">
@@ -169,10 +170,10 @@ const ResetPassword = () => {
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200 text-sm"
-              disabled={loading}
             >
-              {loading ? "Resetting..." : "Reset Password"}
+              Reset Password
             </button>
+
           </>
         )}
 

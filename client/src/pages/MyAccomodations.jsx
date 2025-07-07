@@ -2,6 +2,7 @@ import React, { useContext, useEffect } from "react";
 import NavPlace from "../components/NavPlace";
 import { PlaceContext } from "../context/PlaceContext.jsx";
 import { UserContext } from "../context/UserContext.jsx";
+import { LoaderContext } from "../context/LoaderContext.jsx";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import {
@@ -14,10 +15,12 @@ import {
 const MyAccomodations = () => {
   const { isLoggedIn } = useContext(UserContext);
   const { places, setPlaces } = useContext(PlaceContext);
+  const { setLoading } = useContext(LoaderContext); // 👈 loader context
   const URI = import.meta.env.VITE_BACKEND_URI;
 
   const fetchPlacesDetails = async () => {
     try {
+      setLoading(true); // 👈 start loader
       const { data } = await axios.get(URI + "/api/places", {
         withCredentials: true,
       });
@@ -26,6 +29,8 @@ const MyAccomodations = () => {
       }
     } catch (err) {
       console.log(err.response?.data.message);
+    } finally {
+      setLoading(false); // 👈 stop loader
     }
   };
 
@@ -59,9 +64,7 @@ const MyAccomodations = () => {
               className="bg-white rounded-2xl shadow-md overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1"
             >
               <img
-                src={`${URI}/${
-                  place.photos[Math.floor(Math.random() * place.photos.length)]
-                }`}
+                src={`${URI}/${place.photos[Math.floor(Math.random() * place.photos.length)]}`}
                 alt={place.title}
                 className="h-56 w-full object-cover"
               />
@@ -101,7 +104,7 @@ const MyAccomodations = () => {
                   </div>
                 </div>
 
-                {/* Move this price block below everything, aligned right */}
+                {/* Price Info */}
                 <div className="pt-4 flex justify-end items-end">
                   <div className="text-right">
                     <span className="text-2xl font-bold text-green-600">

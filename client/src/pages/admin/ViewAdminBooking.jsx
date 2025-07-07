@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { UserContext } from "../context/UserContext.jsx";
-import { LoaderContext } from "../context/LoaderContext.jsx";
+import { UserContext } from "../../context/UserContext.jsx";
+import { LoaderContext } from "../../context/LoaderContext.jsx";
 import { UsersIcon } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
+import toast from "react-hot-toast";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -13,20 +14,20 @@ import {
   UserIcon,
   CalendarIcon,
   CurrencyRupeeIcon,
-  PencilIcon,
-  TrashIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/solid";
-import toast from "react-hot-toast";
 
-const ViewBooking = () => {
+const ViewAdminBooking = () => {
   const { id } = useParams();
   const { isLoggedIn } = useContext(UserContext);
   const { setLoading } = useContext(LoaderContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
+  const navigate = useNavigate();
+
   const [booking, setBooking] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
+  const [status, setStatus] = useState("");
 
   const fetchBookingDetails = async () => {
     try {
@@ -36,26 +37,31 @@ const ViewBooking = () => {
       });
       if (data.success) {
         setBooking(data.data);
+        setStatus(data.data.status);
       }
     } catch (err) {
-      console.log(err.response?.data.message);
+      toast.error(err.response?.data.message || "Failed to load booking");
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteBooking = async () => {
+  const updateStatus = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.delete(`${URI}/api/booking/${id}`, {
-        withCredentials: true,
-      });
+      const { data } = await axios.put(
+        `${URI}/api/admin/bookings/${id}/status`,
+        { status },
+        { withCredentials: true }
+      );
       if (data.success) {
-        toast.success(data.message);
-        navigate("/account/bookings");
+        toast.success("Booking status updated successfully");
+        setBooking(data.data);
+        navigate("/admin/bookings");
+        
       }
     } catch (err) {
-      toast.error(err.response?.data.message || "Failed to delete booking");
+      toast.error(err.response?.data.message || "Failed to update status");
     } finally {
       setLoading(false);
     }
@@ -74,8 +80,7 @@ const ViewBooking = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) =>
       booking.place.photos
-        ? (prev - 1 + booking.place.photos.length) %
-          booking.place.photos.length
+        ? (prev - 1 + booking.place.photos.length) % booking.place.photos.length
         : 0
     );
   };
@@ -87,6 +92,8 @@ const ViewBooking = () => {
       </div>
     );
 
+  const statusOptions = ["pending", "confirmed", "completed", "cancelled"];
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-10 font-sans">
       {/* Image slider */}
@@ -96,9 +103,7 @@ const ViewBooking = () => {
             key={index}
             src={`${URI}/${photo}`}
             alt=""
-            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
           />
         ))}
         <button
@@ -117,68 +122,14 @@ const ViewBooking = () => {
           {booking.place.photos.map((_, index) => (
             <span
               key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentSlide
-                  ? "bg-white"
-                  : "bg-white/50 hover:bg-white"
-              }`}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide ? "bg-white" : "bg-white/50 hover:bg-white"}`}
             />
           ))}
         </div>
       </div>
 
-      {/* Place Details */}
-      <div className="space-y-4">
-        <h2 className="text-3xl font-bold text-gray-800 flex justify-between items-center">
-          {booking.place.title}
-        </h2>
-        <p className="text-gray-600">{booking.place.description}</p>
-        <div className="flex items-center gap-2 text-gray-500">
-          <MapPinIcon className="w-5 h-5 text-blue-600" />
-          <p>{booking.place.address}</p>
-        </div>
-        <div className="flex flex-wrap gap-3 mt-2">
-          {booking.place.perks.map((perk, i) => (
-            <span
-              key={i}
-              className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-            >
-              {perk}
-            </span>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-3 mt-2">
-          {booking.place.amenities.map((perk, i) => (
-            <span
-              key={i}
-              className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-            >
-              {perk}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start relative">
-        {/* Edit + Delete */}
-        <div className="absolute right-0 top-0 flex gap-3 pr-2">
-          <button
-            onClick={() => navigate(`/account/bookings/${booking._id}/edit`)}
-            className="flex items-center gap-1 px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-full text-sm transition"
-          >
-            <PencilIcon className="w-4 h-4" />
-            Edit
-          </button>
-          <button
-            onClick={deleteBooking}
-            className="flex items-center gap-1 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-full text-sm transition"
-          >
-            <TrashIcon className="w-4 h-4" />
-            Delete
-          </button>
-        </div>
-
+      {/* Booking & Status Info */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {/* Owner Info */}
         <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center">
           <img
@@ -193,11 +144,34 @@ const ViewBooking = () => {
           </div>
         </div>
 
-        {/* Booking Info */}
-        <div className="md:col-span-2 bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl shadow space-y-4">
-          <h3 className="text-2xl font-semibold text-blue-900 mb-3">
-            Booking Information
-          </h3>
+        {/* Booking Info + Status Control */}
+        <div className="md:col-span-2 bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl shadow space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-semibold text-blue-900">
+              Booking Details
+            </h3>
+            <div className="flex items-center gap-2">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="border px-3 py-2 rounded-md bg-white"
+              >
+                {statusOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={updateStatus}
+                className="flex items-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
+              >
+                <ClipboardDocumentCheckIcon className="w-4 h-4" />
+                Update
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
             <div className="flex items-center gap-2">
               <UserIcon className="w-5 h-5 text-blue-600" />
@@ -214,19 +188,13 @@ const ViewBooking = () => {
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-blue-600" />
               <p>
-                Check-In:{" "}
-                <strong>
-                  {new Date(booking.checkIn).toLocaleDateString()}
-                </strong>
+                Check-In: <strong>{new Date(booking.checkIn).toLocaleDateString()}</strong>
               </p>
             </div>
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-blue-600" />
               <p>
-                Check-Out:{" "}
-                <strong>
-                  {new Date(booking.checkOut).toLocaleDateString()}
-                </strong>
+                Check-Out: <strong>{new Date(booking.checkOut).toLocaleDateString()}</strong>
               </p>
             </div>
             <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl shadow-sm">
@@ -237,13 +205,9 @@ const ViewBooking = () => {
                 </span>
               </div>
               <div className="text-sm text-gray-500 ml-auto">
-                Booked on:{" "}
-                <span className="font-medium">
+                Booked on: <span className="font-medium">
                   {booking.createdAt
-                    ? format(
-                        new Date(booking.createdAt),
-                        "dd MMM yyyy, hh:mm a"
-                      )
+                    ? format(new Date(booking.createdAt), "dd MMM yyyy, hh:mm a")
                     : "Unknown"}
                 </span>
               </div>
@@ -261,4 +225,4 @@ const ViewBooking = () => {
   );
 };
 
-export default ViewBooking;
+export default ViewAdminBooking;

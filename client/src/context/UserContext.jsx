@@ -24,7 +24,7 @@ const UserContextProvider = ({ children }) => {
     } catch (err) {
       console.log(err.response?.data.message);
     }
-  };
+  }
 
   useEffect(() => {
     fetchUserDetails();

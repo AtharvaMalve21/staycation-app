@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { UserContext } from "../../context/UserContext.jsx";
+import { LoaderContext } from "../../context/LoaderContext.jsx";
+
 import {
   EnvelopeIcon,
   EyeIcon,
@@ -12,6 +14,7 @@ import {
 
 const Login = () => {
   const { setIsLoggedIn, setUser } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +29,8 @@ const Login = () => {
   const loginUserAccount = async (ev) => {
     ev.preventDefault();
     try {
+      setLoading(true); // ✅ Show loader
+
       const { data } = await axios.post(
         URI + "/api/auth/login",
         { email, password },
@@ -38,21 +43,24 @@ const Login = () => {
       );
 
       if (data.success) {
-        setUser(data.data)
+        setUser(data.data);
         setIsLoggedIn(true);
         toast.success(data.message);
         const role = data.data.role;
 
-        if (role === 'user') {
-          navigate("/")
+        if (role === "user") {
+          navigate("/");
         } else {
           navigate("/admin/dashboard");
         }
       }
     } catch (err) {
-      toast.error(err.response?.data.message);
+      toast.error(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-90px)] flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4 py-10">

@@ -5,10 +5,13 @@ import toast from "react-hot-toast";
 import { EyeIcon, EnvelopeIcon, EyeSlashIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { LockClosedIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 import { UserContext } from "../../context/UserContext.jsx"
+import { LoaderContext } from "../../context/LoaderContext.jsx";
+
 
 const Register = () => {
 
-  const { setUser } = useContext(UserContext)
+  const { setUser } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,12 +50,14 @@ const Register = () => {
     formData.append("password", password);
     formData.append("gender", gender);
     formData.append("phone", phone);
-    formData.append("role", role); // ✅ Add role to form data
+    formData.append("role", role);
     if (profilePhoto) {
       formData.append("profilePic", profilePhoto);
     }
 
     try {
+      setLoading(true); // ✅ Show loader
+
       const { data } = await axios.post(`${URI}/api/auth/register`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
@@ -65,8 +70,11 @@ const Register = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false); // ✅ Hide loader
     }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-90px)] flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4 py-10">

@@ -1,14 +1,21 @@
-import React from 'react'
-import Navbar from '../components/Navbar.jsx'
-import { Outlet } from 'react-router-dom'
+import React, { useContext } from "react";
+import { Outlet } from "react-router-dom";
+import { LoaderContext } from "../context/LoaderContext.jsx";
+import Loader from "../components/Loader";
+import Navbar from "../components/Navbar.jsx";
 
 const Layout = () => {
-  return (
-    <div>
-      <Navbar />
-      <Outlet />
-    </div>
-  )
-}
+  const { loading } = useContext(LoaderContext);
 
-export default Layout
+  return (
+    <>
+      {loading && <Loader />}
+      <main className="min-h-screen">
+        <Navbar />
+        <Outlet />
+      </main>
+    </>
+  );
+};
+
+export default Layout;

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/UserContext.jsx";
+import { LoaderContext } from "../context/LoaderContext.jsx"; // ⬅️ import
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -15,12 +16,14 @@ import {
 
 const MyProfile = () => {
   const { user, setIsLoggedIn, setUser } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext); // ⬅️ use LoaderContext
   const [totalBookings, setTotalBookings] = useState("");
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
   const logoutUserAccount = async () => {
     try {
+      setLoading(true); // ⬅️ start loader
       const { data } = await axios.get(URI + "/api/auth/logout", {
         withCredentials: true,
       });
@@ -33,17 +36,24 @@ const MyProfile = () => {
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Logout failed.");
+    } finally {
+      setLoading(false); // ⬅️ stop loader
     }
   };
 
   const fetchBookingDetails = async () => {
     try {
-      const { data } = await axios.get(URI + "/api/booking", { withCredentials: true });
+      setLoading(true); // ⬅️ start loader
+      const { data } = await axios.get(URI + "/api/booking", {
+        withCredentials: true,
+      });
       if (data.success) {
         setTotalBookings(data.data.length);
       }
     } catch (err) {
       console.log(err.response?.data.message);
+    } finally {
+      setLoading(false); // ⬅️ stop loader
     }
   };
 
@@ -55,7 +65,6 @@ const MyProfile = () => {
     <div className="min-h-[calc(100vh-90px)] bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
       <div className="bg-white shadow-2xl rounded-2xl max-w-md w-full p-8 space-y-6 animate-fade-in">
 
-        
         {/* Profile Image with Badge */}
         <div className="flex justify-center relative">
           <div className="relative">
@@ -71,7 +80,6 @@ const MyProfile = () => {
             )}
           </div>
         </div>
-
 
         {/* User Info */}
         <div className="text-center space-y-1">
@@ -156,4 +164,4 @@ const LogoutIcon = () => (
       d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
     />
   </svg>
-);
+)

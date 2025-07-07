@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
+const connectToCloudinary = require("./config/cloudinary");
 
 //route handlers
 const authRoutes = require("./routes/authRoutes");
@@ -31,6 +32,9 @@ app.use(cookieParser());
 
 //connection with MongoDb
 connectDB();
+
+//connection with Cloudinary
+connectToCloudinary();
 
 //route handlers
 app.use("/api/auth", authRoutes);

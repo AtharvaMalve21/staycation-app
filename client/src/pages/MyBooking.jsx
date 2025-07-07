@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/UserContext.jsx";
 import { BookingContext } from "../context/BookingContext.jsx";
+import { LoaderContext } from "../context/LoaderContext.jsx";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import {
@@ -15,28 +16,35 @@ import {
 const MyBooking = () => {
   const { isLoggedIn, user } = useContext(UserContext);
   const { bookings, setBookings } = useContext(BookingContext);
+  const { setLoading } = useContext(LoaderContext); // Loader context used here
   const [adminBooking, setAdminBooking] = useState([]);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
   const fetchBookingDetails = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/booking`, {
         withCredentials: true,
       });
       if (data.success) setBookings(data.data);
     } catch (err) {
       console.log(err.response?.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchBookingForAdmins = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/booking/admin`, {
         withCredentials: true,
       });
       if (data.success) setAdminBooking(data.data);
     } catch (err) {
       console.log(err.response?.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 

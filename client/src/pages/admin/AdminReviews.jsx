@@ -2,22 +2,27 @@ import React, { useState, useEffect, useContext } from 'react';
 import AdminNav from '../../components/AdminNav';
 import axios from 'axios';
 import { UserContext } from '../../context/UserContext';
+import { LoaderContext } from '../../context/LoaderContext'; // ✅ Added
 import { Trash } from 'lucide-react';
-import toast from 'react-hot-toast';
+import {toast} from 'react-hot-toast';
 
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const { isLoggedIn } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext); // ✅ Use loader
   const URI = import.meta.env.VITE_BACKEND_URI;
 
   const fetchReviews = async () => {
     try {
+      setLoading(true); // ✅ Start loading
       const { data } = await axios.get(`${URI}/api/admin/reviews`, {
         withCredentials: true,
       });
       if (data.success) setReviews(data.data);
     } catch (err) {
       console.log(err.response?.data?.message || "Error fetching reviews");
+    } finally {
+      setLoading(false); // ✅ End loading
     }
   };
 
@@ -27,7 +32,7 @@ const AdminReviews = () => {
         withCredentials: true,
       });
       if (data.success) {
-        setReviews(reviews.filter((review) => review._id !== id));
+        setReviews((prev) => prev.filter((review) => review._id !== id));
         toast.success("Review deleted successfully");
       }
     } catch (err) {
@@ -36,7 +41,9 @@ const AdminReviews = () => {
   };
 
   useEffect(() => {
-    fetchReviews();
+    if (isLoggedIn) {
+      fetchReviews();
+    }
   }, [isLoggedIn]);
 
   return (

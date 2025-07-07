@@ -6,8 +6,7 @@ const Review = require("../models/reviewModel");
 //only admins can access
 exports.addPlace = async (req, res) => {
   try {
-    
-    //authenticate user
+    // Authenticate user
     const userId = req.user._id;
     const user = await User.findById(userId);
 
@@ -25,7 +24,7 @@ exports.addPlace = async (req, res) => {
       });
     }
 
-    //fetch the place details
+    // Fetch place details
     const {
       title,
       address,
@@ -42,7 +41,7 @@ exports.addPlace = async (req, res) => {
       rules,
     } = req.body;
 
-    //validate the details
+    // Validate required fields
     if (
       !title ||
       !address ||
@@ -62,10 +61,8 @@ exports.addPlace = async (req, res) => {
       });
     }
 
-    //add photos
-    const photos = req.files.map((file) => file.path);
-
-    if (!photos || photos.length === 0) {
+    // Validate photos
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
         message:
@@ -73,12 +70,25 @@ exports.addPlace = async (req, res) => {
       });
     }
 
-    //create new place and save it to db
+    // Upload photos to Cloudinary
+    const photoUrls = [];
+
+    for (const file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "stay-cation/places",
+      });
+      photoUrls.push(result.secure_url);
+
+      // Delete local file after upload
+      fs.unlinkSync(file.path);
+    }
+
+    // Create place
     const newPlace = await Place.create({
       title,
       address,
       description,
-      photos,
+      photos: photoUrls,
       type,
       location,
       perks,
@@ -92,7 +102,6 @@ exports.addPlace = async (req, res) => {
       owner: userId,
     });
 
-    //return response
     return res.status(201).json({
       success: true,
       data: newPlace,
@@ -167,12 +176,20 @@ exports.filterPlaces = async (req, res) => {
   try {
     const { type } = req.query;
 
-    const places = await Place.find({ type: type }).populate("owner");
+    let filter = {};
+    if (type) {
+      // Use case-insensitive regex for matching exact type
+      filter.type = new RegExp(`^${type}$`, "i");
+    }
+
+    const places = await Place.find(filter).populate("owner").lean();
 
     return res.status(200).json({
       success: true,
       data: places,
-      message: `Places filtered successfully by type: ${type}`,
+      message: type
+        ? `Places filtered successfully by type: ${type}`
+        : "All places fetched successfully",
     });
   } catch (err) {
     res.status(500).json({
@@ -185,7 +202,7 @@ exports.filterPlaces = async (req, res) => {
 //only admins can update this place
 exports.updatePlace = async (req, res) => {
   try {
-    //authenticate user
+    // Authenticate user
     const userId = req.user._id;
     const user = await User.findById(userId);
     if (!user) {
@@ -218,9 +235,6 @@ exports.updatePlace = async (req, res) => {
       rules,
     } = req.body;
 
-    const photos = req.files.map((file) => file.path) || place.photos;
-
-    //find place
     const { id: placeId } = req.params;
     const place = await Place.findById(placeId);
     if (!place) {
@@ -234,10 +248,25 @@ exports.updatePlace = async (req, res) => {
       return res.status(403).json({ message: "Access denied." });
     }
 
+    // Upload new photos to Cloudinary (if any)
+    let photoUrls = place.photos;
+    if (req.files && req.files.length > 0) {
+      photoUrls = [];
+
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "stay-cation/places",
+        });
+        photoUrls.push(result.secure_url);
+        fs.unlinkSync(file.path); // Delete local file
+      }
+    }
+
+    // Update place fields
     place.title = title || place.title;
     place.address = address || place.address;
     place.description = description || place.description;
-    place.photos = photos || place.photos;
+    place.photos = photoUrls;
     place.type = type || place.type;
     place.location = location || place.location;
     place.perks = perks || place.perks;
@@ -249,7 +278,7 @@ exports.updatePlace = async (req, res) => {
     place.price = price || place.price;
     place.rules = rules || place.rules;
 
-    place.status = "inactive";
+    place.status = "inactive"; // Optional: Mark it inactive until re-verified
     await place.save();
 
     return res.status(200).json({
@@ -268,7 +297,6 @@ exports.updatePlace = async (req, res) => {
 //only admins can delete this place
 exports.deletePlace = async (req, res) => {
   try {
-    //authenticate user
     const userId = req.user._id;
     const user = await User.findById(userId);
     if (!user) {
@@ -285,7 +313,6 @@ exports.deletePlace = async (req, res) => {
       });
     }
 
-    //find place
     const { id: placeId } = req.params;
     const place = await Place.findById(placeId);
     if (!place) {
@@ -294,19 +321,24 @@ exports.deletePlace = async (req, res) => {
         message: "No place found with the specified ID.",
       });
     }
+
     if (place.owner.toString() !== userId.toString()) {
       return res.status(403).json({ message: "Access denied." });
     }
 
+    // Optional: Delete Cloudinary images
+    if (place.photos && place.photos.length > 0) {
+      for (const photoUrl of place.photos) {
+        // Extract public_id from URL if not stored separately
+        const publicId = photoUrl.split("/").slice(-1)[0].split(".")[0]; // crude way
+        await cloudinary.uploader.destroy(`stay-cation/places/${publicId}`);
+      }
+    }
+
     await place.deleteOne();
+    await Booking.deleteMany({ place: placeId });
+    await Review.deleteMany({ place: placeId });
 
-    //delete the user booking
-    await Booking.deleteMany({place: placeId});
-    
-
-    //delete the user reviews
-    await Review.deleteMany({place:placeId});
-    
     return res.status(200).json({
       success: true,
       message: "Place has been successfully deleted from the system.",

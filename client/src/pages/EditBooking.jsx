@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext.jsx";
+import { LoaderContext } from "../context/LoaderContext.jsx";
 import axios from "axios";
 import {
   ChevronLeftIcon,
@@ -8,17 +9,17 @@ import {
   MapPinIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/solid";
-import toast from "react-hot-toast";
+import {toast} from "react-hot-toast";
 
 const EditBooking = () => {
   const { id } = useParams();
   const { isLoggedIn } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
   const [booking, setBooking] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,6 +38,7 @@ const EditBooking = () => {
 
   const fetchBookingDetails = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/booking/${id}`, {
         withCredentials: true,
       });
@@ -44,17 +46,18 @@ const EditBooking = () => {
         setBooking(data.data);
       }
     } catch (err) {
-      console.error(err.response?.data.message);
+      console.error(err.response?.data.message || "Failed to fetch booking");
+    } finally {
+      setLoading(false);
     }
   };
 
   const editBooking = async (ev) => {
     ev.preventDefault();
     try {
+      setLoading(true);
       const { data } = await axios.put(`${URI}/api/booking/${id}`, formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
       if (data.success) {
@@ -64,6 +67,8 @@ const EditBooking = () => {
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,7 +90,9 @@ const EditBooking = () => {
 
   const nextSlide = () => {
     setCurrentSlide((prev) =>
-      booking.placeId.photos ? (prev + 1) % booking.placeId.photos.length : 0
+      booking.placeId.photos
+        ? (prev + 1) % booking.placeId.photos.length
+        : 0
     );
   };
 
@@ -98,11 +105,12 @@ const EditBooking = () => {
     );
   };
 
-  if (!booking) return <div className="text-center mt-10">Loading...</div>;
+  if (!booking)
+    return <div className="text-center mt-10 text-gray-600">Loading booking...</div>;
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-10 font-sans">
-      {/* Image slider */}
+      {/* Image Slider */}
       <div className="relative w-full h-[420px] overflow-hidden rounded-3xl shadow-lg">
         {booking.placeId.photos.map((photo, index) => (
           <img
@@ -142,9 +150,7 @@ const EditBooking = () => {
 
       {/* Place Details */}
       <div className="space-y-4">
-        <h2 className="text-3xl font-bold text-gray-800">
-          {booking.placeId.title}
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-800">{booking.placeId.title}</h2>
         <p className="text-gray-600">{booking.placeId.description}</p>
         <div className="flex items-center gap-2 text-gray-500">
           <MapPinIcon className="w-5 h-5 text-blue-600" />
@@ -178,19 +184,15 @@ const EditBooking = () => {
           </div>
         </div>
 
-        {/* Booking Info Form */}
+        {/* Edit Form */}
         <form
           onSubmit={editBooking}
           className="bg-white rounded-2xl p-6 shadow-md space-y-4 col-span-2"
         >
-          <h3 className="text-xl font-semibold mb-2 text-gray-700">
-            Edit Booking
-          </h3>
+          <h3 className="text-xl font-semibold mb-2 text-gray-700">Edit Booking</h3>
 
           <div className="space-y-1">
-            <label htmlFor="name" className="block text-gray-600">
-              Name
-            </label>
+            <label htmlFor="name" className="block text-gray-600">Name</label>
             <input
               type="text"
               name="name"
@@ -202,9 +204,7 @@ const EditBooking = () => {
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="email" className="block text-gray-600">
-              Email
-            </label>
+            <label htmlFor="email" className="block text-gray-600">Email</label>
             <input
               type="email"
               name="email"
@@ -217,9 +217,7 @@ const EditBooking = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label htmlFor="checkIn" className="block text-gray-600">
-                Check-In
-              </label>
+              <label htmlFor="checkIn" className="block text-gray-600">Check-In</label>
               <input
                 type="date"
                 name="checkIn"
@@ -230,9 +228,7 @@ const EditBooking = () => {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="checkOut" className="block text-gray-600">
-                Check-Out
-              </label>
+              <label htmlFor="checkOut" className="block text-gray-600">Check-Out</label>
               <input
                 type="date"
                 name="checkOut"
@@ -245,9 +241,7 @@ const EditBooking = () => {
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="maxGuests" className="block text-gray-600">
-              Max Guests
-            </label>
+            <label htmlFor="maxGuests" className="block text-gray-600">Max Guests</label>
             <input
               type="number"
               name="maxGuests"

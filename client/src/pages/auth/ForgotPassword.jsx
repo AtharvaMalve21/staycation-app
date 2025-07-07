@@ -2,18 +2,19 @@ import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
 import toast from 'react-hot-toast';
-
+import { LoaderContext } from '../../context/LoaderContext.jsx'; // ✅ import loader context
 
 const ForgotPassword = () => {
-
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
   const URI = import.meta.env.VITE_BACKEND_URI;
+  const { setLoading } = useContext(LoaderContext); // ✅ use loader
 
   const forgotPassword = async (e) => {
     e.preventDefault();
-
     try {
+      setLoading(true); // ✅ start loader
+
       const { data } = await axios.post(
         URI + "/api/auth/forgot-password",
         { email },
@@ -32,6 +33,8 @@ const ForgotPassword = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false); // ✅ stop loader
     }
   };
 

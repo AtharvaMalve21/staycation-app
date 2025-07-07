@@ -27,7 +27,10 @@ exports.getAllUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const users = await User.find({}).skip(skip).limit(limit);
+    const users = await User.find({})
+      .skip(skip)
+      .limit(limit)
+      .select("-password");
 
     return res.status(200).json({
       success: true,
@@ -107,7 +110,7 @@ exports.searchUser = async (req, res) => {
     // Perform case-insensitive partial search using regex
     const users = await User.find({
       name: { $regex: query.trim(), $options: "i" },
-    });
+    }).select("-password");
 
     if (users.length === 0) {
       return res.status(404).json({
@@ -308,6 +311,218 @@ exports.getStats = async (req, res) => {
       success: true,
       data: data,
       message: "Stats data fetched successfully.",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getRecentActivities = async (req, res) => {
+  try {
+    // Fetch recent entries
+    const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5);
+    const recentPlaces = await Place.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("owner", "name");
+    const recentBookings = await Booking.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("user place", "name");
+    const recentReviews = await Review.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("createdBy place", "name");
+
+    const activities = [];
+
+    // Push user registration activities
+    recentUsers.forEach((user) =>
+      activities.push({
+        type: "user",
+        message: `${user.name} registered`,
+        date: user.createdAt,
+      })
+    );
+
+    // Push place addition activities
+    recentPlaces.forEach((place) =>
+      activities.push({
+        type: "place",
+        message: `${place.owner?.name || "Unknown"} added a new place: ${
+          place.title
+        }`,
+        date: place.createdAt,
+      })
+    );
+
+    // Push booking activities
+    recentBookings.forEach((booking) =>
+      activities.push({
+        type: "booking",
+        message: `${booking.user?.name || "Unknown"} made a booking`,
+        date: booking.createdAt,
+      })
+    );
+
+    // Push review activities
+    recentReviews.forEach((review) =>
+      activities.push({
+        type: "review",
+        message: `${review.createdBy?.name || "Unknown"} reviewed ${
+          review.place?.name || "a place"
+        }`,
+        date: review.createdAt,
+      })
+    );
+
+    // Sort and send top 10
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.status(200).json({
+      success: true,
+      message: "Recent activity fetched",
+      data: activities.slice(0, 10),
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getBookingTrends = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+
+    // Get today's date and go back 6 months
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(endDate.getMonth() - 5);
+
+    const bookingStats = await Booking.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 },
+      },
+    ]);
+
+    // Generate list of last 6 months
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const trends = [];
+
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(endDate.getMonth() - (5 - i));
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+
+      const stat = bookingStats.find(
+        (b) => b._id.month === month && b._id.year === year
+      );
+
+      trends.push({
+        month: `${monthNames[month - 1]}`,
+        bookings: stat ? stat.count : 0,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking trends fetched successfully",
+      data: trends,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching booking trends",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized. Admin access required.",
+      });
+    }
+
+    const { id: bookingId } = req.params;
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found.",
+      });
+    }
+
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a status.",
+      });
+    }
+
+    const allowedStatuses = ["pending", "confirmed", "completed", "cancelled"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value.",
+      });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      data: booking,
+      message: "Booking status updated successfully.",
     });
   } catch (err) {
     res.status(500).json({

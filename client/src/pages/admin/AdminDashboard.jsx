@@ -1,4 +1,3 @@
-// src/pages/admin/AdminDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -9,17 +8,39 @@ import {
   StarIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
-import { UserContext } from "../../context/UserContext";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
+import { UserContext } from "../../context/UserContext";
+import { LoaderContext } from "../../context/LoaderContext";
+import ActivityFeed from "../../components/ActivityFeed";
 
 const AdminDashboard = () => {
   const { isLoggedIn } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
+
   const [stats, setStats] = useState({});
+  const [bookingTrends, setBookingTrends] = useState([]);
   const location = useLocation();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchStats();
+      fetchBookingTrends();
+    }
+  }, [isLoggedIn]);
 
   const fetchStats = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/admin/stats`, {
         withCredentials: true,
       });
@@ -27,13 +48,24 @@ const AdminDashboard = () => {
         setStats(data.data);
       }
     } catch (err) {
-      console.error(err.response?.data?.message || "Error fetching stats");
+      console.error("Error fetching stats:", err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, [isLoggedIn]);
+  const fetchBookingTrends = async () => {
+    try {
+      const { data } = await axios.get(`${URI}/api/admin/booking-trends`, {
+        withCredentials: true,
+      });
+      if (data.success) {
+        setBookingTrends(data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching trends:", err.message);
+    }
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -43,11 +75,36 @@ const AdminDashboard = () => {
           AdminPanel
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
-          <SidebarLink to="/admin" label="Dashboard" icon={<ChartBarIcon className="w-5 h-5" />} current={location.pathname === "/admin"} />
-          <SidebarLink to="/admin/users" label="Users" icon={<UserGroupIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/users")} />
-          <SidebarLink to="/admin/places" label="Places" icon={<HomeIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/places")} />
-          <SidebarLink to="/admin/bookings" label="Bookings" icon={<CalendarDaysIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/bookings")} />
-          <SidebarLink to="/admin/reviews" label="Reviews" icon={<StarIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/reviews")} />
+          <SidebarLink
+            to="/admin/dashboard"
+            label="Dashboard"
+            icon={<ChartBarIcon className="w-5 h-5" />}
+            current={location.pathname === "/admin/dashboard"}
+          />
+          <SidebarLink
+            to="/admin/users"
+            label="Users"
+            icon={<UserGroupIcon className="w-5 h-5" />}
+            current={location.pathname.includes("/admin/users")}
+          />
+          <SidebarLink
+            to="/admin/places"
+            label="Places"
+            icon={<HomeIcon className="w-5 h-5" />}
+            current={location.pathname.includes("/admin/places")}
+          />
+          <SidebarLink
+            to="/admin/bookings"
+            label="Bookings"
+            icon={<CalendarDaysIcon className="w-5 h-5" />}
+            current={location.pathname.includes("/admin/bookings")}
+          />
+          <SidebarLink
+            to="/admin/reviews"
+            label="Reviews"
+            icon={<StarIcon className="w-5 h-5" />}
+            current={location.pathname.includes("/admin/reviews")}
+          />
         </nav>
       </aside>
 
@@ -55,27 +112,39 @@ const AdminDashboard = () => {
       <main className="ml-64 flex-1 bg-gray-50 p-10">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">Dashboard Overview</h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <DashboardCard
-            icon={<UserGroupIcon className="w-6 h-6 text-blue-600" />}
-            label="Users"
-            value={stats?.totalUsers}
-          />
-          <DashboardCard
-            icon={<HomeIcon className="w-6 h-6 text-purple-600" />}
-            label="Places"
-            value={stats?.totalPlaces}
-          />
-          <DashboardCard
-            icon={<CalendarDaysIcon className="w-6 h-6 text-green-600" />}
-            label="Bookings"
-            value={stats?.totalBookings}
-          />
-          <DashboardCard
-            icon={<StarIcon className="w-6 h-6 text-yellow-500" />}
-            label="Reviews"
-            value={stats?.totalReviews}
-          />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <DashboardCard icon={<UserGroupIcon className="w-6 h-6 text-blue-600" />} label="Users" value={stats?.totalUsers} />
+          <DashboardCard icon={<HomeIcon className="w-6 h-6 text-purple-600" />} label="Places" value={stats?.totalPlaces} />
+          <DashboardCard icon={<CalendarDaysIcon className="w-6 h-6 text-green-600" />} label="Bookings" value={stats?.totalBookings} />
+          <DashboardCard icon={<StarIcon className="w-6 h-6 text-yellow-500" />} label="Reviews" value={stats?.totalReviews} />
+        </div>
+
+        {/* Trends & Feed Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Booking Trends Chart */}
+          <div className="bg-white p-6 rounded-2xl shadow-md">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Booking Trends</h2>
+            {bookingTrends.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={bookingTrends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="bookings" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-gray-500 text-sm">No booking data yet.</p>
+            )}
+          </div>
+
+          {/* Activity Feed */}
+          <div className="bg-white p-6 rounded-2xl shadow-md">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h2>
+            <ActivityFeed />
+          </div>
         </div>
       </main>
     </div>
@@ -88,11 +157,8 @@ export default AdminDashboard;
 const SidebarLink = ({ to, label, icon, current }) => (
   <Link
     to={to}
-    className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium text-sm transition ${
-      current
-        ? "bg-blue-100 text-blue-700"
-        : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-    }`}
+    className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium text-sm transition ${current ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+      }`}
   >
     {icon}
     {label}

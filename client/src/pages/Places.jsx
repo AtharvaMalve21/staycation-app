@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { PlaceContext } from "../context/PlaceContext.jsx";
 import { UserContext } from "../context/UserContext.jsx";
+import { LoaderContext } from "../context/LoaderContext.jsx";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
@@ -13,10 +14,12 @@ import {
 const Places = () => {
   const { isLoggedIn } = useContext(UserContext);
   const { places, setPlaces } = useContext(PlaceContext);
+  const { setLoading } = useContext(LoaderContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
   const fetchPlacesDetails = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(URI + "/api/places", {
         withCredentials: true,
       });
@@ -26,6 +29,8 @@ const Places = () => {
       }
     } catch (err) {
       console.log(err.response?.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 

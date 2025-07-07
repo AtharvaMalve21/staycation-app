@@ -1,52 +1,39 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { LoaderContext } from "../context/LoaderContext.jsx";
 import axios from "axios";
-import toast from "react-hot-toast";
-import { PlaceContext } from "../context/PlaceContext";
-
-const perksList = [
-  { label: "Wifi", icon: "📶", name: "wifi" },
-  { label: "Free Parking Spot", icon: "🅿️", name: "parking" },
-  { label: "TV", icon: "📺", name: "tv" },
-  { label: "Radio", icon: "📻", name: "radio" },
-  { label: "Pets Allowed", icon: "🐶", name: "pets" },
-  { label: "Private Entrance", icon: "🚪", name: "entrance" },
-];
+import {toast} from "react-hot-toast";
 
 const EditPlaces = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const URI = import.meta.env.VITE_BACKEND_URI;
-
-  const [loading, setLoading] = useState(true);
-
-  const { places, setPlaces } = useContext(PlaceContext);
+  const navigate = useNavigate();
+  const { setLoading } = useContext(LoaderContext);
 
   const [tourType, setTourType] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
-  const [photos, setPhotos] = useState([]);
   const [existingPhotos, setExistingPhotos] = useState([]);
-  const [previewPhotos, setPreviewPhotos] = useState([]);
+  const [photos, setPhotos] = useState([]);
   const [perks, setPerks] = useState([]);
   const [extraInfo, setExtraInfo] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [maxGuests, setMaxGuests] = useState("");
-  const [price, setPrice] = useState("");
+  const [maxGuests, setMaxGuests] = useState(1);
+  const [price, setPrice] = useState(0);
 
+  // Fetch place data
   useEffect(() => {
     const fetchPlace = async () => {
       try {
+        setLoading(true);
         const { data } = await axios.get(`${URI}/api/places/${id}`, {
           withCredentials: true,
         });
+
         const place = data.data;
-
-        console.log(data);
-
         setTourType(place.tourType);
         setAdditionalDetails(place.additionalDetails);
         setTitle(place.title);
@@ -59,39 +46,30 @@ const EditPlaces = () => {
         setCheckOut(place.checkOut);
         setMaxGuests(place.maxGuests);
         setPrice(place.price);
-        setLoading(false);
-      } catch (error) {
-        toast.error("Failed to fetch place data");
+      } catch (err) {
+        toast.error("Failed to fetch place data.");
         navigate("/account/places");
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchPlace();
   }, [id]);
 
-  const handlePhotoUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setPhotos(files);
-    setPreviewPhotos(files.map((file) => URL.createObjectURL(file)));
-  };
-
-  const handlePerkToggle = (perk) => {
-    setPerks((prev) =>
-      prev.includes(perk) ? prev.filter((p) => p !== perk) : [...prev, perk]
-    );
-  };
-
-  const updatePlace = async (ev) => {
-    ev.preventDefault();
-
+  const updatePlace = async (e) => {
+    e.preventDefault();
     try {
+      setLoading(true);
       const formData = new FormData();
+
       formData.append("tourType", tourType);
       formData.append("additionalDetails", additionalDetails);
       formData.append("title", title);
       formData.append("description", description);
       formData.append("address", address);
-      formData.append("existingPhotos", JSON.stringify(existingPhotos)); // Keep existing photos
-      photos.forEach((photo) => formData.append("photos", photo)); // Append new photos
+      formData.append("existingPhotos", JSON.stringify(existingPhotos));
+      photos.forEach((photo) => formData.append("photos", photo));
       formData.append("perks", JSON.stringify(perks));
       formData.append("extraInfo", extraInfo);
       formData.append("checkIn", checkIn);
@@ -112,187 +90,143 @@ const EditPlaces = () => {
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Update failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading)
-    return <div className="text-center mt-8 text-lg">Loading...</div>;
+  const handlePhotoUpload = (e) => {
+    setPhotos([...e.target.files]);
+  };
+
+  if (!title) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md mt-8 space-y-8">
-      <h2 className="text-3xl font-bold text-gray-800">Edit Your Listing</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Edit Accommodation</h2>
 
       <form onSubmit={updatePlace} className="space-y-6">
         {/* Title */}
         <div>
-          <label className="font-medium text-lg">Title</label>
+          <label className="block text-gray-600 font-medium">Title</label>
           <input
             type="text"
-            className="w-full border p-3 mt-1 rounded-lg"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title for your place"
-          />
-        </div>
-
-        {/* Address */}
-        <div>
-          <label className="font-medium text-lg">Address</label>
-          <input
-            type="text"
-            className="w-full border p-3 mt-1 rounded-lg"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Address of your place"
+            className="w-full border rounded p-2 mt-1"
+            required
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="font-medium text-lg">Description</label>
+          <label className="block text-gray-600 font-medium">Description</label>
           <textarea
-            className="w-full border p-3 mt-1 rounded-lg"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe your place..."
-          />
+            className="w-full border rounded p-2 mt-1"
+            rows="3"
+          ></textarea>
         </div>
 
-        {/* Tour Type */}
+        {/* Address */}
         <div>
-          <label className="font-medium text-lg">Tour Type</label>
+          <label className="block text-gray-600 font-medium">Address</label>
           <input
             type="text"
-            className="w-full border p-3 mt-1 rounded-lg"
-            value={tourType}
-            onChange={(e) => setTourType(e.target.value)}
-            placeholder="e.g., Adventure, Beach, Hill station"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full border rounded p-2 mt-1"
+            required
           />
         </div>
 
-        {/* Additional Details */}
+        {/* Existing Photos */}
         <div>
-          <label className="font-medium text-lg">Additional Details</label>
-          <input
-            type="text"
-            className="w-full border p-3 mt-1 rounded-lg"
-            value={additionalDetails}
-            onChange={(e) => setAdditionalDetails(e.target.value)}
-          />
-        </div>
-
-        {/* Perks */}
-        <div>
-          <label className="font-medium text-lg block mb-2">Perks</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {perksList.map((perk) => (
-              <label
-                key={perk.name}
-                className={`flex items-center gap-2 border p-3 rounded-lg cursor-pointer ${
-                  perks.includes(perk.name) ? "bg-blue-100 border-blue-400" : ""
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={perks.includes(perk.name)}
-                  onChange={() => handlePerkToggle(perk.name)}
-                />
-                <span>
-                  {perk.icon} {perk.label}
-                </span>
-              </label>
+          <label className="block text-gray-600 font-medium">Current Photos</label>
+          <div className="flex flex-wrap gap-4 mt-2">
+            {existingPhotos.map((photo, i) => (
+              <img
+                key={i}
+                src={`${URI}/${photo}`}
+                alt="Existing"
+                className="w-28 h-20 object-cover rounded border"
+              />
             ))}
           </div>
         </div>
 
-        {/* Photo Upload */}
+        {/* Upload New Photos */}
         <div>
-          <label className="font-medium text-lg">Photos</label>
+          <label className="block text-gray-600 font-medium">Upload New Photos</label>
           <input
             type="file"
             multiple
-            accept="image/*"
-            className="w-full mt-2"
             onChange={handlePhotoUpload}
-          />
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            {existingPhotos.map((src, idx) => (
-              <img
-                key={idx}
-                src={`${URI}/${src}`}
-                alt={`Existing ${idx}`}
-                className="h-24 w-full object-cover rounded-md border"
-              />
-            ))}
-            {previewPhotos.map((src, index) => (
-              <img
-                key={index}
-                src={src}
-                alt={`Preview ${index}`}
-                className="h-24 w-full object-cover rounded-md border"
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Extra Info */}
-        <div>
-          <label className="font-medium text-lg">Extra Info</label>
-          <textarea
-            className="w-full border p-3 mt-1 rounded-lg"
-            value={extraInfo}
-            onChange={(e) => setExtraInfo(e.target.value)}
-            placeholder="Rules, special notes, etc."
+            className="mt-2"
           />
         </div>
 
-        {/* Check-in / Check-out / Max Guests / Price */}
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Check-in, Check-out, Guests */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label>Check-In</label>
+            <label className="block text-gray-600 font-medium">Check-In</label>
             <input
-              type="text"
-              className="w-full border p-2 rounded"
+              type="time"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
+              className="w-full border rounded p-2 mt-1"
             />
           </div>
           <div>
-            <label>Check-Out</label>
+            <label className="block text-gray-600 font-medium">Check-Out</label>
             <input
-              type="text"
-              className="w-full border p-2 rounded"
+              type="time"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
+              className="w-full border rounded p-2 mt-1"
             />
           </div>
           <div>
-            <label>Max Guests</label>
+            <label className="block text-gray-600 font-medium">Max Guests</label>
             <input
               type="number"
-              className="w-full border p-2 rounded"
+              min="1"
               value={maxGuests}
               onChange={(e) => setMaxGuests(e.target.value)}
+              className="w-full border rounded p-2 mt-1"
             />
           </div>
-          <div>
-            <label>Price (per night)</label>
-            <input
-              type="number"
-              className="w-full border p-2 rounded"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-          </div>
+        </div>
+
+        {/* Price */}
+        <div>
+          <label className="block text-gray-600 font-medium">Price (₹)</label>
+          <input
+            type="number"
+            min="0"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full border rounded p-2 mt-1"
+            required
+          />
         </div>
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all text-lg font-medium"
-        >
-          Save Changes
-        </button>
+        <div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200"
+          >
+            Update Accommodation
+          </button>
+        </div>
       </form>
     </div>
   );

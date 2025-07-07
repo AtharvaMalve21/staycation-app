@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useParams, useNavigate } from "react-router-dom";
+import { LoaderContext } from "../context/LoaderContext.jsx"; // ✅ Import global context
 
 const BookingWidget = ({ price }) => {
   const [checkIn, setCheckIn] = useState("");
@@ -15,6 +16,8 @@ const BookingWidget = ({ price }) => {
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
+  const { setLoading } = useContext(LoaderContext); // ✅ Access global loader
+
   const toggleContactFields = () => setShowContactFields((prev) => !prev);
 
   const checkInDate = checkIn ? new Date(checkIn) : null;
@@ -25,7 +28,8 @@ const BookingWidget = ({ price }) => {
       ? Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))
       : 0;
 
-  const totalAmount = numberOfNights > 0 ? numberOfNights * price * maxGuests : 0;
+  const totalAmount =
+    numberOfNights > 0 ? numberOfNights * price * maxGuests : 0;
 
   const addBooking = async (e) => {
     e.preventDefault();
@@ -35,8 +39,9 @@ const BookingWidget = ({ price }) => {
     }
 
     try {
+      setLoading(true); // ✅ Start global loader
       const { data } = await axios.post(
-        URI + `/api/booking/${id}`,
+        `${URI}/api/booking/${id}`,
         { checkIn, checkOut, maxGuests, name, email },
         {
           headers: { "Content-Type": "application/json" },
@@ -51,6 +56,8 @@ const BookingWidget = ({ price }) => {
     } catch (err) {
       toast.error(err.response?.data.message || "Booking failed");
       navigate("/login");
+    } finally {
+      setLoading(false); // ✅ Stop global loader
     }
   };
 
@@ -59,6 +66,7 @@ const BookingWidget = ({ price }) => {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Book This Stay</h2>
 
       <form onSubmit={addBooking} className="space-y-5">
+        {/* Date Inputs */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium text-gray-700">Check-in</label>
@@ -66,8 +74,8 @@ const BookingWidget = ({ price }) => {
               type="date"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
             />
           </div>
           <div>
@@ -76,12 +84,13 @@ const BookingWidget = ({ price }) => {
               type="date"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
             />
           </div>
         </div>
 
+        {/* Guests */}
         <div>
           <label className="text-sm font-medium text-gray-700">Number of Guests</label>
           <input
@@ -89,26 +98,19 @@ const BookingWidget = ({ price }) => {
             min="1"
             value={maxGuests}
             onChange={(e) => setMaxGuests(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
           />
         </div>
 
-        {/* Toggle Button */}
-        <div>
-          <button
-            type="button"
-            onClick={toggleContactFields}
-            className="w-full flex items-center justify-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md py-2 transition duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061A1.125 1.125 0 0 1 21 8.689v8.122ZM11.25 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061a1.125 1.125 0 0 1 1.683.977v8.122Z" />
-            </svg>
-
-            {showContactFields ? "Hide Contact Information" : "Add Contact Information"}
-          </button>
-        </div>
-
+        {/* Toggle Contact Info */}
+        <button
+          type="button"
+          onClick={toggleContactFields}
+          className="w-full text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md py-2 transition"
+        >
+          {showContactFields ? "Hide Contact Information" : "Add Contact Information"}
+        </button>
 
         {/* Contact Fields */}
         {showContactFields && (
@@ -119,8 +121,8 @@ const BookingWidget = ({ price }) => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
               />
             </div>
             <div>
@@ -129,14 +131,14 @@ const BookingWidget = ({ price }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
               />
             </div>
           </div>
         )}
 
-        {/* Total Price */}
+        {/* Price */}
         {numberOfNights > 0 && (
           <div className="text-right mt-2">
             <p className="text-sm text-gray-600">
@@ -146,11 +148,11 @@ const BookingWidget = ({ price }) => {
           </div>
         )}
 
-        {/* Submit Button */}
+        {/* Submit */}
         {showContactFields && (
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition"
           >
             Book Now
           </button>

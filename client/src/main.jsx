@@ -4,6 +4,7 @@ import UserContextProvider from "./context/UserContext.jsx";
 import { PlaceContextProvider } from "./context/PlaceContext.jsx";
 import { BookingContextProvider } from "./context/BookingContext.jsx";
 import { ReviewsContextProvider } from "./context/ReviewsContext.jsx";
+import { LoaderContextProvider } from "./context/LoaderContext.jsx";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
@@ -14,7 +15,9 @@ createRoot(document.getElementById("root")).render(
       <PlaceContextProvider>
         <BookingContextProvider>
           <ReviewsContextProvider>
-            <App />
+            <LoaderContextProvider>
+              <App />
+            </LoaderContextProvider>
           </ReviewsContextProvider>
         </BookingContextProvider>
       </PlaceContextProvider>

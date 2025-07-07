@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { LoaderContext } from "../../context/LoaderContext";
 
 const perksList = [
   { label: "Wifi", icon: "📶", name: "wifi" },
-  { label: "Free Parking", icon: "🅿️", name: "parking" },
+  { label: "Free Parking", icon: "🄿️", name: "parking" },
   { label: "TV", icon: "📺", name: "tv" },
   { label: "Radio", icon: "📻", name: "radio" },
   { label: "Pets Allowed", icon: "🐶", name: "pets" },
@@ -25,10 +26,11 @@ const AccommodationsForm = () => {
   const [checkOut, setCheckOut] = useState("");
   const [maxGuests, setMaxGuests] = useState("");
   const [price, setPrice] = useState("");
-  const [rules,setRules] = useState("");
+  const [rules, setRules] = useState("");
 
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
+  const { setLoading } = useContext(LoaderContext);
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -45,6 +47,8 @@ const AccommodationsForm = () => {
   const addNewPlace = async (ev) => {
     ev.preventDefault();
     try {
+      setLoading(true);
+
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
@@ -72,194 +76,197 @@ const AccommodationsForm = () => {
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Failed to add place");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-10 rounded-2xl shadow-lg mt-10 space-y-10">
-      <h2 className="text-3xl font-bold text-red-700 text-center">
+    <div className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-xl mt-10 space-y-10">
+      <h2 className="text-3xl md:text-4xl font-bold text-red-700 text-center">
         Add New Accommodation
       </h2>
 
       <form onSubmit={addNewPlace} className="space-y-8">
-        {/* --- Section: Basic Info --- */}
-        <div className="space-y-4">
-          <div>
-            <label className="block font-semibold text-gray-700">Title</label>
-            <input
-              type="text"
-              placeholder="e.g. Beachfront Villa"
-              className="form-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-gray-700">Description</label>
-            <textarea
-              rows="3"
-              placeholder="Write about the place..."
-              className="form-textarea"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            ></textarea>
-          </div>
-
-          <div>
-            <label className="block font-semibold text-gray-700">Address</label>
-            <input
-              type="text"
-              placeholder="123 Main St, City"
-              className="form-input"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </div>
+        {/* Title */}
+        <div>
+          <label className="form-label">Title</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="form-input"
+            placeholder="e.g., Cozy Apartment with View"
+            required
+          />
         </div>
 
-        {/* --- Section: Photos --- */}
+        {/* Description */}
         <div>
-          <label className="block font-semibold text-gray-700 mb-2">Upload Photos</label>
-          <input type="file" multiple onChange={handlePhotoUpload} className="hidden" id="upload" />
-          <label
-            htmlFor="upload"
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700"
-          >
-            Upload Photos
-          </label>
+          <label className="form-label">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="form-textarea"
+            rows={3}
+            placeholder="Describe the property..."
+            required
+          />
+        </div>
 
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            {previewPhotos.map((src, index) => (
-              <img key={index} src={src} alt={`Preview ${index}`} className="h-24 w-full rounded-md object-cover" />
+        {/* Address */}
+        <div>
+          <label className="form-label">Address</label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="form-input"
+            placeholder="Full address of the accommodation"
+            required
+          />
+        </div>
+
+        {/* Photos Upload */}
+        <div>
+          <label className="form-label">Upload Photos</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handlePhotoUpload}
+            className="form-input cursor-pointer"
+          />
+          <div className="mt-4 grid grid-cols-3 md:grid-cols-4 gap-3">
+            {previewPhotos.map((src, idx) => (
+              <img
+                key={idx}
+                src={src}
+                alt="Preview"
+                className="rounded-lg h-24 w-full object-cover shadow"
+              />
             ))}
           </div>
         </div>
 
-        {/* --- Section: Perks --- */}
+        {/* Perks */}
         <div>
-          <label className="block font-semibold text-gray-700 mb-2">Select Perks</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <label className="form-label">Perks</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {perksList.map((perk) => (
               <label
                 key={perk.name}
-                className={`flex items-center gap-2 border px-4 py-2 rounded-md cursor-pointer ${perks.includes(perk.name)
-                    ? "bg-blue-100 border-blue-500"
-                    : "border-gray-300"
+                className={`border rounded-lg px-4 py-2 flex items-center gap-3 text-sm font-medium cursor-pointer transition-all duration-200 ${perks.includes(perk.name)
+                  ? "bg-blue-100 border-blue-400 text-blue-700"
+                  : "hover:bg-gray-100"
                   }`}
               >
                 <input
                   type="checkbox"
                   checked={perks.includes(perk.name)}
                   onChange={() => handlePerkToggle(perk.name)}
+                  className="hidden"
                 />
-                <span>{perk.icon}</span>
+                <span className="text-xl">{perk.icon}</span>
                 {perk.label}
               </label>
             ))}
           </div>
         </div>
 
-        {/* --- Section: Amenities, Rules --- */}
-        <div className="space-y-4">
-          <div>
-            <label className="block font-semibold text-gray-700">Amenities</label>
-            <textarea
-              rows="2"
-              placeholder="List of amenities"
-              className="form-textarea"
-              value={amenities}
-              onChange={(e) => setAmenities(e.target.value)}
-            ></textarea>
-          </div>
-
-          <div>
-            <label className="block font-semibold text-gray-700">Extra Info </label>
-            <input
-              type="text"
-              placeholder="e.g. Perfect for weekend getaways or romantic retreats."
-              className="form-input"
-              value={extraInfo}
-              onChange={(e) => setExtraInfo(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-gray-700">Rules</label>
-            <input
-              type="text"
-              placeholder="e.g. No loud music after 10 PM"
-              className="form-input"
-              value={rules}
-              onChange={(e) => setRules(e.target.value)}
-            />
-          </div>
+        {/* Amenities */}
+        <div>
+          <label className="form-label">Amenities</label>
+          <input
+            type="text"
+            value={amenities}
+            onChange={(e) => setAmenities(e.target.value)}
+            className="form-input"
+            placeholder="e.g., Gym, Swimming Pool"
+          />
         </div>
 
-        {/* --- Section: Timing & Capacity --- */}
-        <div className="grid grid-cols-2 gap-6">
+        {/* Extra Info */}
+        <div>
+          <label className="form-label">Extra Info</label>
+          <textarea
+            value={extraInfo}
+            onChange={(e) => setExtraInfo(e.target.value)}
+            className="form-textarea"
+            rows={2}
+            placeholder="Any additional info..."
+          />
+        </div>
+
+        {/* Check-in/out + Guests */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
-            <label className="block font-semibold text-gray-700">Check-In</label>
+            <label className="form-label">Check-In</label>
             <input
-              type="number"
-              min="0"
-              max="23"
-              placeholder="e.g. 12"
-              className="form-input"
+              type="time"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
+              className="form-input"
+              required
             />
           </div>
-
           <div>
-            <label className="block font-semibold text-gray-700">Check-Out</label>
+            <label className="form-label">Check-Out</label>
             <input
-              type="number"
-              min="0"
-              max="23"
-              placeholder="e.g. 14"
-              className="form-input"
+              type="time"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
+              className="form-input"
+              required
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block font-semibold text-gray-700">Max Guests</label>
+            <label className="form-label">Max Guests</label>
             <input
               type="number"
-              min="1"
-              placeholder="e.g. 4"
-              className="form-input"
               value={maxGuests}
               onChange={(e) => setMaxGuests(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-gray-700">Price (₹/night)</label>
-            <input
-              type="number"
-              min="1"
-              placeholder="e.g. 1200"
               className="form-input"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              required
             />
           </div>
         </div>
 
+        {/* Price + Rules */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="form-label">Price (per night)</label>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label">House Rules</label>
+            <input
+              type="text"
+              value={rules}
+              onChange={(e) => setRules(e.target.value)}
+              className="form-input"
+              placeholder="e.g., No smoking"
+            />
+          </div>
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-all text-lg font-semibold"
+          className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold shadow transition"
         >
-          + Add Accommodation
+          Save Accommodation
         </button>
       </form>
     </div>
   );
+
 };
 
 export default AccommodationsForm;
