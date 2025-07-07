@@ -123,7 +123,7 @@ const Login = () => {
               </button>
             </div>
             <Link
-              to="/forgot-password"
+              to="/reset-password"
               className="float-right text-xs text-indigo-700 hover:text-blue-600 cursor-pointer transition-all duration-150 underline-offset-2 hover:underline active:text-blue-800"
             >
               Forgot Password?

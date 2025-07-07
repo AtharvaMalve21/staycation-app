@@ -75,7 +75,7 @@ const ViewBooking = () => {
     setCurrentSlide((prev) =>
       booking.place.photos
         ? (prev - 1 + booking.place.photos.length) %
-          booking.place.photos.length
+        booking.place.photos.length
         : 0
     );
   };
@@ -94,11 +94,10 @@ const ViewBooking = () => {
         {booking.place.photos.map((photo, index) => (
           <img
             key={index}
-            src={`${URI}/${photo}`}
-            alt=""
-            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
+            src={photo}
+            alt={`Slide ${index + 1}`}
+            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
           />
         ))}
         <button
@@ -117,11 +116,10 @@ const ViewBooking = () => {
           {booking.place.photos.map((_, index) => (
             <span
               key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentSlide
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide
                   ? "bg-white"
                   : "bg-white/50 hover:bg-white"
-              }`}
+                }`}
             />
           ))}
         </div>
@@ -182,7 +180,7 @@ const ViewBooking = () => {
         {/* Owner Info */}
         <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center">
           <img
-            src={`${URI}/${booking.user.profilePic}`}
+            src={booking.user.profilePic}
             alt="Owner"
             className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3"
           />
@@ -241,9 +239,9 @@ const ViewBooking = () => {
                 <span className="font-medium">
                   {booking.createdAt
                     ? format(
-                        new Date(booking.createdAt),
-                        "dd MMM yyyy, hh:mm a"
-                      )
+                      new Date(booking.createdAt),
+                      "dd MMM yyyy, hh:mm a"
+                    )
                     : "Unknown"}
                 </span>
               </div>

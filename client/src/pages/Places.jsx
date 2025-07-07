@@ -49,7 +49,7 @@ const Places = () => {
               className="bg-white rounded-2xl shadow-md overflow-hidden transform transition duration-200 hover:-translate-y-1 hover:shadow-2xl border border-gray-100"
             >
               <img
-                src={`${URI}/${place.photos[Math.floor(Math.random() * place.photos.length)]}`}
+                src={place.photos?.[Math.floor(Math.random() * place.photos.length)] || "/placeholder.jpg"}
                 alt={place.title}
                 className="h-52 w-full object-cover rounded-t-2xl"
               />
@@ -68,7 +68,7 @@ const Places = () => {
 
                 <div className="flex items-center gap-3 mt-4">
                   <img
-                    src={`${URI}/${place.owner.profilePic}`}
+                    src={place.owner.profilePic}
                     alt={place.owner.name}
                     className="w-10 h-10 rounded-full object-cover border border-gray-300"
                   />

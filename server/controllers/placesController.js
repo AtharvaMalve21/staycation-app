@@ -2,30 +2,32 @@ const Place = require("../models/placesModel");
 const User = require("../models/userModel");
 const Booking = require("../models/bookingModel");
 const Review = require("../models/reviewModel");
+const fs = require("fs");
+const cloudinary = require("cloudinary").v2;
 
-//only admins can access
+//only admins can add new places
 exports.addPlace = async (req, res) => {
   try {
-    // Authenticate user
     const userId = req.user._id;
-    const user = await User.findById(userId);
 
+    // Authenticate user
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User authentication failed. Please log in again.",
+        message: "User not found. Please log in again.",
       });
     }
 
     if (user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Unauthorized action. Only admins can add new listings.",
+        message: "Unauthorized. Only admins can add listings.",
       });
     }
 
-    // Fetch place details
-    const {
+    // Extract and parse fields from req.body
+    let {
       title,
       address,
       description,
@@ -41,11 +43,22 @@ exports.addPlace = async (req, res) => {
       rules,
     } = req.body;
 
+    if (typeof perks === "string") perks = JSON.parse(perks);
+    if (typeof amenities === "string") amenities = JSON.parse(amenities);
+    if (typeof location === "string") location = JSON.parse(location);
+
+    // Ensure rules is always a string
+    if (Array.isArray(rules)) {
+      rules = rules.join(", ");
+    }
+    rules = rules?.trim();
+
     // Validate required fields
     if (
       !title ||
       !address ||
       !description ||
+      !type ||
       !perks ||
       !amenities ||
       !extraInfo ||
@@ -57,33 +70,48 @@ exports.addPlace = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "All required fields must be filled to create a new place.",
+        message: "Please fill all required fields to add a new place.",
       });
     }
 
-    // Validate photos
+    const validTypes = ["Apartment", "Villa", "Cottage", "Room", "Other"];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid accommodation type.",
+      });
+    }
+
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message:
-          "At least one photo is required to publish a place listing. Please upload a photo.",
+        message: "At least one photo is required.",
       });
     }
 
-    // Upload photos to Cloudinary
-    const photoUrls = [];
-
-    for (const file of req.files) {
-      const result = await cloudinary.uploader.upload(file.path, {
+    // Upload all photos concurrently
+    const uploadPromises = req.files.map((file) =>
+      cloudinary.uploader.upload(file.path, {
         folder: "stay-cation/places",
-      });
-      photoUrls.push(result.secure_url);
+      })
+    );
 
-      // Delete local file after upload
-      fs.unlinkSync(file.path);
+    let uploadResults;
+    try {
+      uploadResults = await Promise.all(uploadPromises);
+    } catch (err) {
+      console.error("Cloudinary error:", err.message);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to upload one or more images.",
+      });
     }
 
-    // Create place
+    const photoUrls = uploadResults.map((result, i) => {
+      fs.unlinkSync(req.files[i].path); // cleanup
+      return result.secure_url;
+    });
+
     const newPlace = await Place.create({
       title,
       address,
@@ -104,13 +132,14 @@ exports.addPlace = async (req, res) => {
 
     return res.status(201).json({
       success: true,
+      message: "New accommodation added successfully.",
       data: newPlace,
-      message: "New place has been successfully added to the listings.",
     });
   } catch (err) {
-    res.status(500).json({
+    console.error("❌ Error in addPlace:", err.message);
+    return res.status(500).json({
       success: false,
-      message: `Server error while adding new place: ${err.message}`,
+      message: "Server error while adding place.",
     });
   }
 };
@@ -202,11 +231,11 @@ exports.filterPlaces = async (req, res) => {
 //only admins can update this place
 exports.updatePlace = async (req, res) => {
   try {
-    // Authenticate user
     const userId = req.user._id;
     const user = await User.findById(userId);
+
     if (!user) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "User not found. Please log in again.",
       });
@@ -219,7 +248,8 @@ exports.updatePlace = async (req, res) => {
       });
     }
 
-    const {
+    const { id: placeId } = req.params;
+    let {
       title,
       address,
       description,
@@ -235,7 +265,10 @@ exports.updatePlace = async (req, res) => {
       rules,
     } = req.body;
 
-    const { id: placeId } = req.params;
+    // Parse JSON strings if necessary (coming from FormData)
+    if (typeof perks === "string") perks = JSON.parse(perks);
+    if (typeof location === "string") location = JSON.parse(location);
+
     const place = await Place.findById(placeId);
     if (!place) {
       return res.status(404).json({
@@ -245,28 +278,54 @@ exports.updatePlace = async (req, res) => {
     }
 
     if (place.owner.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Access denied." });
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not the owner of this listing.",
+      });
+    }
+
+    // Validate `type` enum
+    const validTypes = ["Apartment", "Villa", "Cottage", "Room", "Other"];
+    if (type && !validTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid property type selected.",
+      });
     }
 
     // Upload new photos to Cloudinary (if any)
-    let photoUrls = place.photos;
+    let photoUrls = [...place.photos];
+
     if (req.files && req.files.length > 0) {
-      photoUrls = [];
+      const newPhotoUrls = [];
 
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "stay-cation/places",
-        });
-        photoUrls.push(result.secure_url);
-        fs.unlinkSync(file.path); // Delete local file
+        try {
+          const result = await cloudinary.uploader.upload(file.path, {
+            folder: "stay-cation/places",
+          });
+
+          newPhotoUrls.push({
+            url: result.secure_url,
+            public_id: result.public_id,
+          });
+
+          fs.unlinkSync(file.path); // delete local file
+        } catch (uploadErr) {
+          return res.status(500).json({
+            success: false,
+            message: `Cloudinary upload failed: ${uploadErr.message}`,
+          });
+        }
       }
+
+      photoUrls = newPhotoUrls;
     }
 
-    // Update place fields
+    // Update fields
     place.title = title || place.title;
     place.address = address || place.address;
     place.description = description || place.description;
-    place.photos = photoUrls;
     place.type = type || place.type;
     place.location = location || place.location;
     place.perks = perks || place.perks;
@@ -277,17 +336,18 @@ exports.updatePlace = async (req, res) => {
     place.maxGuests = maxGuests || place.maxGuests;
     place.price = price || place.price;
     place.rules = rules || place.rules;
+    place.photos = photoUrls;
+    place.status = "inactive"; // mark for review if needed
 
-    place.status = "inactive"; // Optional: Mark it inactive until re-verified
     await place.save();
 
     return res.status(200).json({
       success: true,
-      data: place,
       message: "Place details updated successfully.",
+      data: place,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: `Failed to update place: ${err.message}`,
     });
@@ -299,10 +359,11 @@ exports.deletePlace = async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
+
     if (!user) {
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        message: "User authentication failed.",
+        message: "User authentication failed. Please log in again.",
       });
     }
 
@@ -315,36 +376,58 @@ exports.deletePlace = async (req, res) => {
 
     const { id: placeId } = req.params;
     const place = await Place.findById(placeId);
+
     if (!place) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: "No place found with the specified ID.",
       });
     }
 
     if (place.owner.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Access denied." });
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not the owner of this listing.",
+      });
     }
 
-    // Optional: Delete Cloudinary images
+    // Delete photos from Cloudinary
     if (place.photos && place.photos.length > 0) {
-      for (const photoUrl of place.photos) {
-        // Extract public_id from URL if not stored separately
-        const publicId = photoUrl.split("/").slice(-1)[0].split(".")[0]; // crude way
-        await cloudinary.uploader.destroy(`stay-cation/places/${publicId}`);
+      for (const photo of place.photos) {
+        let publicId;
+
+        // If photo object includes public_id (recommended)
+        if (typeof photo === "object" && photo.public_id) {
+          publicId = photo.public_id;
+        } else if (typeof photo === "string") {
+          // If only URL is stored — fallback logic
+          const filename = photo.split("/").pop().split(".")[0];
+          publicId = `stay-cation/places/${filename}`;
+        }
+
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (cloudErr) {
+            console.warn(
+              `Failed to delete image from Cloudinary: ${cloudErr.message}`
+            );
+          }
+        }
       }
     }
 
+    // Delete place and related data
     await place.deleteOne();
     await Booking.deleteMany({ place: placeId });
     await Review.deleteMany({ place: placeId });
 
     return res.status(200).json({
       success: true,
-      message: "Place has been successfully deleted from the system.",
+      message: "Place and related data successfully deleted.",
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: `Failed to delete place: ${err.message}`,
     });

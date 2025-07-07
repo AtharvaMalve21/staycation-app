@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/UserContext.jsx";
-import { LoaderContext } from "../context/LoaderContext.jsx"; // ⬅️ import
+import { LoaderContext } from "../context/LoaderContext.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -11,20 +11,20 @@ import {
   PencilIcon,
   CheckBadgeIcon,
   XCircleIcon,
-  UserCircleIcon
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
 const MyProfile = () => {
   const { user, setIsLoggedIn, setUser } = useContext(UserContext);
-  const { setLoading } = useContext(LoaderContext); // ⬅️ use LoaderContext
+  const { setLoading } = useContext(LoaderContext);
   const [totalBookings, setTotalBookings] = useState("");
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
 
   const logoutUserAccount = async () => {
     try {
-      setLoading(true); // ⬅️ start loader
-      const { data } = await axios.get(URI + "/api/auth/logout", {
+      setLoading(true);
+      const { data } = await axios.get(`${URI}/api/auth/logout`, {
         withCredentials: true,
       });
 
@@ -37,14 +37,14 @@ const MyProfile = () => {
     } catch (err) {
       toast.error(err.response?.data.message || "Logout failed.");
     } finally {
-      setLoading(false); // ⬅️ stop loader
+      setLoading(false);
     }
   };
 
   const fetchBookingDetails = async () => {
     try {
-      setLoading(true); // ⬅️ start loader
-      const { data } = await axios.get(URI + "/api/booking", {
+      setLoading(true);
+      const { data } = await axios.get(`${URI}/api/booking`, {
         withCredentials: true,
       });
       if (data.success) {
@@ -53,7 +53,7 @@ const MyProfile = () => {
     } catch (err) {
       console.log(err.response?.data.message);
     } finally {
-      setLoading(false); // ⬅️ stop loader
+      setLoading(false);
     }
   };
 
@@ -64,15 +64,20 @@ const MyProfile = () => {
   return (
     <div className="min-h-[calc(100vh-90px)] bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
       <div className="bg-white shadow-2xl rounded-2xl max-w-md w-full p-8 space-y-6 animate-fade-in">
-
         {/* Profile Image with Badge */}
         <div className="flex justify-center relative">
           <div className="relative">
-            <img
-              src={user?.profilePic ? `${URI}/${user.profilePic}` : "/default-profile.png"}
-              alt="Profile"
-              className="w-28 h-28 rounded-full border-4 border-blue-500 object-cover shadow-md"
-            />
+            {user?.profilePic ? (
+              <img
+                src={user.profilePic}
+                alt="Profile"
+                className="w-28 h-28 rounded-full border-4 border-blue-500 object-cover shadow-md"
+              />
+            ) : (
+              <div className="w-28 h-28 rounded-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold text-3xl shadow-md border-4 border-blue-400">
+                {user?.name?.charAt(0)}
+              </div>
+            )}
             {user?.isAccountVerified && (
               <div className="absolute bottom-1 right-1 bg-white rounded-full p-0.5 shadow-md">
                 <CheckBadgeIcon className="w-6 h-6 text-green-500" />
@@ -155,7 +160,7 @@ const MyProfile = () => {
 
 export default MyProfile;
 
-// Icons
+// Logout Icon
 const LogoutIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
     <path
@@ -164,4 +169,4 @@ const LogoutIcon = () => (
       d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
     />
   </svg>
-)
+);

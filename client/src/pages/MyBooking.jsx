@@ -16,7 +16,7 @@ import {
 const MyBooking = () => {
   const { isLoggedIn, user } = useContext(UserContext);
   const { bookings, setBookings } = useContext(BookingContext);
-  const { setLoading } = useContext(LoaderContext); // Loader context used here
+  const { setLoading } = useContext(LoaderContext);
   const [adminBooking, setAdminBooking] = useState([]);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -28,7 +28,7 @@ const MyBooking = () => {
       });
       if (data.success) setBookings(data.data);
     } catch (err) {
-      console.log(err.response?.data.message);
+      console.log(err.response?.data.message || "Error fetching bookings.");
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ const MyBooking = () => {
       });
       if (data.success) setAdminBooking(data.data);
     } catch (err) {
-      console.log(err.response?.data.message);
+      console.log(err.response?.data.message || "Error fetching admin bookings.");
     } finally {
       setLoading(false);
     }
@@ -73,19 +73,21 @@ const MyBooking = () => {
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.01] transition-all duration-300 overflow-hidden"
               >
                 <img
-                  src={`${URI}/${booking.place.photos[0]}`}
-                  alt="Place"
+                  src={booking.place.photos[0]}
+                  alt={booking.place.title}
                   className="w-full h-60 object-cover"
                 />
+
                 <div className="p-4 space-y-4">
                   <div className="flex items-center gap-2 text-gray-700 font-medium">
                     <MapPinIcon className="h-5 w-5 text-red-500" />
                     {booking.place.address}
                   </div>
 
+                  {/* User Info */}
                   <div className="flex items-center gap-3">
                     <img
-                      src={`${URI}/${booking.user.profilePic}`}
+                      src={booking.user.profilePic}
                       alt="User"
                       className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
                     />
@@ -101,12 +103,14 @@ const MyBooking = () => {
                     </div>
                   </div>
 
+                  {/* Booking Person Info */}
                   <div>
                     <p className="text-sm text-gray-500">Booking For:</p>
                     <p className="font-medium text-gray-800">{booking.name}</p>
                     <p className="text-sm text-gray-600">{booking.email}</p>
                   </div>
 
+                  {/* Date Info */}
                   <div className="space-y-1 text-sm text-gray-700">
                     <div className="flex items-center gap-2">
                       <CalendarDaysIcon className="h-5 w-5 text-yellow-600" />
@@ -124,6 +128,7 @@ const MyBooking = () => {
                     </div>
                   </div>
 
+                  {/* Guests & Price */}
                   <div className="flex items-center justify-between text-sm font-medium">
                     <div className="flex items-center gap-2 text-indigo-600">
                       <UsersIcon className="h-5 w-5" />

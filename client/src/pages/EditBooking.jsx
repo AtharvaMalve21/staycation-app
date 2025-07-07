@@ -9,7 +9,7 @@ import {
   MapPinIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/solid";
-import {toast} from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 const EditBooking = () => {
   const { id } = useParams();
@@ -30,10 +30,7 @@ const EditBooking = () => {
 
   const handleChange = (ev) => {
     const { name, value } = ev.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const fetchBookingDetails = async () => {
@@ -42,11 +39,9 @@ const EditBooking = () => {
       const { data } = await axios.get(`${URI}/api/booking/${id}`, {
         withCredentials: true,
       });
-      if (data.success) {
-        setBooking(data.data);
-      }
+      if (data.success) setBooking(data.data);
     } catch (err) {
-      console.error(err.response?.data.message || "Failed to fetch booking");
+      toast.error(err.response?.data.message || "Failed to fetch booking");
     } finally {
       setLoading(false);
     }
@@ -61,19 +56,18 @@ const EditBooking = () => {
         withCredentials: true,
       });
       if (data.success) {
-        setBooking(data.data);
         toast.success(data.message);
         navigate("/account/bookings");
       }
     } catch (err) {
-      toast.error(err.response?.data.message || "Something went wrong");
+      toast.error(err.response?.data.message || "Failed to update booking");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBookingDetails();
+    if (isLoggedIn) fetchBookingDetails();
   }, [isLoggedIn]);
 
   useEffect(() => {
@@ -90,17 +84,14 @@ const EditBooking = () => {
 
   const nextSlide = () => {
     setCurrentSlide((prev) =>
-      booking.placeId.photos
-        ? (prev + 1) % booking.placeId.photos.length
-        : 0
+      booking?.placeId?.photos ? (prev + 1) % booking.placeId.photos.length : 0
     );
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) =>
-      booking.placeId.photos
-        ? (prev - 1 + booking.placeId.photos.length) %
-          booking.placeId.photos.length
+      booking?.placeId?.photos
+        ? (prev - 1 + booking.placeId.photos.length) % booking.placeId.photos.length
         : 0
     );
   };
@@ -111,42 +102,44 @@ const EditBooking = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-10 font-sans">
       {/* Image Slider */}
-      <div className="relative w-full h-[420px] overflow-hidden rounded-3xl shadow-lg">
-        {booking.placeId.photos.map((photo, index) => (
-          <img
-            key={index}
-            src={`${URI}/${photo}`}
-            alt=""
-            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        ))}
-        <button
-          className="absolute top-1/2 left-5 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100"
-          onClick={prevSlide}
-        >
-          <ChevronLeftIcon className="w-5 h-5 text-gray-800" />
-        </button>
-        <button
-          className="absolute top-1/2 right-5 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100"
-          onClick={nextSlide}
-        >
-          <ChevronRightIcon className="w-5 h-5 text-gray-800" />
-        </button>
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-          {booking.placeId.photos.map((_, index) => (
-            <span
+      {booking.placeId.photos?.length > 0 && (
+        <div className="relative w-full h-[420px] overflow-hidden rounded-3xl shadow-lg">
+          {booking.placeId.photos.map((photo, index) => (
+            <img
               key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentSlide
-                  ? "bg-white"
-                  : "bg-white/50 hover:bg-white"
-              }`}
+              src={photo.startsWith("http") ? photo : `https://res.cloudinary.com/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload/${photo}`}
+              alt={`Slide ${index + 1}`}
+              className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
             />
           ))}
+          <button
+            className="absolute top-1/2 left-5 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100"
+            onClick={prevSlide}
+          >
+            <ChevronLeftIcon className="w-5 h-5 text-gray-800" />
+          </button>
+          <button
+            className="absolute top-1/2 right-5 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100"
+            onClick={nextSlide}
+          >
+            <ChevronRightIcon className="w-5 h-5 text-gray-800" />
+          </button>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {booking.placeId.photos.map((_, index) => (
+              <button
+                key={index}
+                aria-label={`Go to slide ${index + 1}`}
+                onClick={() => setCurrentSlide(index)} // Optional: if you want to make them clickable
+                className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide
+                  ? "bg-white"
+                  : "bg-white/50 hover:bg-white"
+                  }`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Place Details */}
       <div className="space-y-4">
@@ -173,7 +166,7 @@ const EditBooking = () => {
         {/* Owner Info */}
         <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center">
           <img
-            src={`${URI}/${booking.owner.profilePic}`}
+            src={booking.owner.profilePic ? booking.owner.profilePic : "/default-avatar.png"}
             alt="Owner"
             className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3"
           />

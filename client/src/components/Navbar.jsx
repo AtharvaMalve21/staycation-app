@@ -3,8 +3,7 @@ import { UserContext } from "../context/UserContext.jsx";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const { user, isLoggedIn } = useContext(UserContext);
-  const URI = import.meta.env.VITE_BACKEND_URI;
+  const { user } = useContext(UserContext);
 
   return (
     <div className="flex items-center justify-between px-6 py-4 shadow-md bg-white sticky top-0 z-50">
@@ -40,9 +39,10 @@ const Navbar = () => {
       {/* Right User/Menu */}
       <div>
         <Link
-          to={user?.role === 'user' ? "/user/dashboard" : "/admin/profile"}
+          to={user?.role === "user" ? "/user/dashboard" : "/admin/profile"}
           className="flex items-center space-x-3 border px-3 py-2 rounded-full hover:shadow-md transition"
         >
+          {/* Menu Icon */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -58,17 +58,20 @@ const Navbar = () => {
             />
           </svg>
 
+          {/* Profile */}
           {user ? (
             <>
-              <img
-                src={
-                  user?.profilePic
-                    ? `${URI}/${user.profilePic}`
-                    : "/default-profile.png"
-                }
-                alt="profile"
-                className="w-8 h-8 rounded-full object-cover"
-              />
+              {user.profilePic ? (
+                <img
+                  src={user.profilePic}
+                  alt="profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white font-semibold uppercase text-sm">
+                  {user.name?.charAt(0)}
+                </div>
+              )}
               <p className="text-sm font-medium text-gray-700 truncate max-w-[100px]">
                 {user.name}
               </p>

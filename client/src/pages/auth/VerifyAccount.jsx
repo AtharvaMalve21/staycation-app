@@ -88,7 +88,7 @@ const VerifyAccount = () => {
       setLoading(false);
     }
   };
-
+  
 
   return (
     <div className="min-h-[calc(100vh-78px)] flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4">

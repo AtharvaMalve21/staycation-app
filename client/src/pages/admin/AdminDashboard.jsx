@@ -7,6 +7,8 @@ import {
   CalendarDaysIcon,
   StarIcon,
   ChartBarIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   LineChart,
@@ -29,6 +31,8 @@ const AdminDashboard = () => {
 
   const [stats, setStats] = useState({});
   const [bookingTrends, setBookingTrends] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const location = useLocation();
 
   useEffect(() => {
@@ -68,49 +72,36 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
+      {/* Mobile Menu Toggle */}
+      <div className="md:hidden bg-white border-b p-4 flex items-center justify-between shadow-sm">
+        <div className="text-xl font-bold text-blue-600">AdminPanel</div>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          {sidebarOpen ? (
+            <XMarkIcon className="w-6 h-6 text-gray-700" />
+          ) : (
+            <Bars3Icon className="w-6 h-6 text-gray-700" />
+          )}
+        </button>
+      </div>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r shadow-md flex flex-col fixed h-full">
-        <div className="p-6 text-2xl font-extrabold text-blue-600 border-b">
+      <aside className={`bg-white md:w-64 w-full md:flex flex-col border-r shadow-md fixed md:static z-50 top-16 md:top-0 h-screen md:h-auto transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+        <div className="p-6 text-2xl font-extrabold text-blue-600 border-b hidden md:block">
           AdminPanel
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
-          <SidebarLink
-            to="/admin/dashboard"
-            label="Dashboard"
-            icon={<ChartBarIcon className="w-5 h-5" />}
-            current={location.pathname === "/admin/dashboard"}
-          />
-          <SidebarLink
-            to="/admin/users"
-            label="Users"
-            icon={<UserGroupIcon className="w-5 h-5" />}
-            current={location.pathname.includes("/admin/users")}
-          />
-          <SidebarLink
-            to="/admin/places"
-            label="Places"
-            icon={<HomeIcon className="w-5 h-5" />}
-            current={location.pathname.includes("/admin/places")}
-          />
-          <SidebarLink
-            to="/admin/bookings"
-            label="Bookings"
-            icon={<CalendarDaysIcon className="w-5 h-5" />}
-            current={location.pathname.includes("/admin/bookings")}
-          />
-          <SidebarLink
-            to="/admin/reviews"
-            label="Reviews"
-            icon={<StarIcon className="w-5 h-5" />}
-            current={location.pathname.includes("/admin/reviews")}
-          />
+          <SidebarLink to="/admin/dashboard" label="Dashboard" icon={<ChartBarIcon className="w-5 h-5" />} current={location.pathname === "/admin/dashboard"} />
+          <SidebarLink to="/admin/users" label="Users" icon={<UserGroupIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/users")} />
+          <SidebarLink to="/admin/places" label="Places" icon={<HomeIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/places")} />
+          <SidebarLink to="/admin/bookings" label="Bookings" icon={<CalendarDaysIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/bookings")} />
+          <SidebarLink to="/admin/reviews" label="Reviews" icon={<StarIcon className="w-5 h-5" />} current={location.pathname.includes("/admin/reviews")} />
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64 flex-1 bg-gray-50 p-10">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">Dashboard Overview</h1>
+      <main className="md:ml-32 flex-1 p-5 sm:p-10">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8">Dashboard Overview</h1>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -120,9 +111,8 @@ const AdminDashboard = () => {
           <DashboardCard icon={<StarIcon className="w-6 h-6 text-yellow-500" />} label="Reviews" value={stats?.totalReviews} />
         </div>
 
-        {/* Trends & Feed Section */}
+        {/* Trends & Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Booking Trends Chart */}
           <div className="bg-white p-6 rounded-2xl shadow-md">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Booking Trends</h2>
             {bookingTrends.length > 0 ? (
@@ -140,7 +130,6 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Activity Feed */}
           <div className="bg-white p-6 rounded-2xl shadow-md">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h2>
             <ActivityFeed />

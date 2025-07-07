@@ -2,19 +2,19 @@ import React, { useState, useEffect, useContext } from 'react';
 import AdminNav from '../../components/AdminNav';
 import axios from 'axios';
 import { UserContext } from '../../context/UserContext';
-import { LoaderContext } from '../../context/LoaderContext'; // ✅ Added
+import { LoaderContext } from '../../context/LoaderContext';
 import { Trash } from 'lucide-react';
-import {toast} from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const { isLoggedIn } = useContext(UserContext);
-  const { setLoading } = useContext(LoaderContext); // ✅ Use loader
+  const { setLoading } = useContext(LoaderContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
   const fetchReviews = async () => {
     try {
-      setLoading(true); // ✅ Start loading
+      setLoading(true);
       const { data } = await axios.get(`${URI}/api/admin/reviews`, {
         withCredentials: true,
       });
@@ -22,7 +22,7 @@ const AdminReviews = () => {
     } catch (err) {
       console.log(err.response?.data?.message || "Error fetching reviews");
     } finally {
-      setLoading(false); // ✅ End loading
+      setLoading(false);
     }
   };
 
@@ -41,9 +41,7 @@ const AdminReviews = () => {
   };
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchReviews();
-    }
+    if (isLoggedIn) fetchReviews();
   }, [isLoggedIn]);
 
   return (
@@ -66,33 +64,41 @@ const AdminReviews = () => {
                 <button
                   onClick={() => deleteReview(r._id)}
                   className="absolute top-3 right-3 text-red-500 hover:text-red-700 z-10"
+                  aria-label="Delete Review"
                 >
                   <Trash className="w-5 h-5" />
                 </button>
 
                 {/* Place Image */}
                 <img
-                  src={`${URI}/${r.place.photos[Math.floor(Math.random() * r.place.photos.length)]}`}
-                  alt={r.place.title}
+                  src={
+                    r.place?.photos?.length > 0
+                      ? r.place.photos[Math.floor(Math.random() * r.place.photos.length)]
+                      : "/placeholder.jpg"
+                  }
+                  alt={r.place?.title || "Place Image"}
                   className="w-full h-48 object-cover rounded-t-2xl"
                 />
+
 
                 {/* Card Content */}
                 <div className="p-5 space-y-4">
                   {/* Place Details */}
                   <div>
                     <h3 className="text-lg font-semibold text-red-700 truncate">
-                      {r.place.title}
+                      {r.place?.title}
                     </h3>
                     <p className="text-sm text-gray-600 line-clamp-2">
-                      {r.place.description}
+                      {r.place?.description}
                     </p>
                     <p className="text-xs text-gray-500 mt-1 italic">
-                      {r.place.address}
+                      {r.place?.address}
                     </p>
                     <div className="flex justify-between text-sm text-gray-500 mt-2">
-                      <span>₹{r.place.price} /night</span>
-                      <span className="italic">{r.place.cancellationPolicy}</span>
+                      <span>₹{r.place?.price} /night</span>
+                      <span className="italic">
+                        {r.place?.cancellationPolicy || "Flexible"}
+                      </span>
                     </div>
                   </div>
 
@@ -109,16 +115,21 @@ const AdminReviews = () => {
                   {/* Reviewer Info */}
                   <div className="flex items-center gap-3 mt-4">
                     <img
-                      src={`${URI}/${r.createdBy?.profilePic}`}
-                      alt="Reviewer"
+                      src={
+                        r.createdBy?.profilePic
+                          ? r.createdBy.profilePic
+                          : "/default-profile.png"
+                      }
+                      alt={r.createdBy?.name || "Reviewer"}
                       className="w-10 h-10 rounded-full object-cover border border-gray-300"
                     />
+
                     <div>
                       <p className="text-sm font-medium text-gray-800">
-                        {r.createdBy.name}
+                        {r.createdBy?.name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {r.createdBy.email}
+                        {r.createdBy?.email}
                       </p>
                     </div>
                   </div>

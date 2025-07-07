@@ -4,11 +4,11 @@ import axios from "axios";
 import { UserContext } from "../context/UserContext.jsx";
 import { ReviewsContext } from "../context/ReviewsContext.jsx";
 import { LoaderContext } from "../context/LoaderContext.jsx";
-import { ChevronLeft, ChevronRight, MapPin, Pencil, Trash } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Trash } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {toast} from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import BookingWidget from "../components/BookingWidget.jsx";
 
 const CustomNextArrow = ({ onClick }) => (
@@ -31,7 +31,7 @@ const CustomPrevArrow = ({ onClick }) => (
 
 const ViewPlace = () => {
   const { id } = useParams();
-  const { isLoggedIn } = useContext(UserContext);
+  const { isLoggedIn, user } = useContext(UserContext);
   const { reviews, setReviews } = useContext(ReviewsContext);
   const { setLoading } = useContext(LoaderContext);
   const [place, setPlace] = useState(null);
@@ -79,10 +79,10 @@ const ViewPlace = () => {
         }
       );
       if (data.success) {
-        setReviews([...reviews, data.data]);
+        toast.success(data.message);
         setBody("");
         setRating("");
-        toast.success(data.message);
+        await fetchReviews(); // ✅ ensure fresh data with populated user
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Error creating review.");
@@ -105,24 +105,6 @@ const ViewPlace = () => {
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Error deleting review.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deletePlace = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axios.delete(`${URI}/api/places/${id}`, {
-        withCredentials: true,
-      });
-      if (data.success) {
-        navigate("/places");
-        toast.success(data.message);
-      }
-    } catch (err) {
-      toast.error(err.response?.data.message || "Error deleting place.");
-      navigate("/login");
     } finally {
       setLoading(false);
     }
@@ -157,20 +139,6 @@ const ViewPlace = () => {
         {/* Header */}
         <div className="flex justify-between items-center flex-wrap gap-4">
           <h1 className="text-3xl font-bold text-gray-800">{place.title}</h1>
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate(`/places/${place._id}/edit`)}
-              className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition"
-            >
-              <Pencil className="w-5 h-5" />
-            </button>
-            <button
-              onClick={deletePlace}
-              className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition"
-            >
-              <Trash className="w-5 h-5" />
-            </button>
-          </div>
         </div>
 
         {/* Address */}
@@ -185,7 +153,7 @@ const ViewPlace = () => {
             {place.photos?.map((photo, idx) => (
               <div key={idx}>
                 <img
-                  src={`${URI}/${photo}`}
+                  src={photo}
                   alt={`Slide ${idx + 1}`}
                   className="w-full h-[400px] md:h-[500px] object-cover rounded-xl"
                 />
@@ -197,7 +165,7 @@ const ViewPlace = () => {
         {/* Owner Info */}
         <div className="flex items-center gap-4 p-4 border rounded-xl bg-gray-50 shadow-sm">
           <img
-            src={`${URI}/${place.owner.profilePic}`}
+            src={place.owner.profilePic}
             alt="Owner"
             className="w-14 h-14 rounded-full object-cover border"
           />
@@ -318,7 +286,7 @@ const ViewPlace = () => {
                     <p className="text-yellow-500 text-sm">⭐ {r.rating}/5</p>
                     <div className="flex items-center gap-3 mt-3">
                       <img
-                        src={`${URI}/${r.createdBy?.profilePic}`}
+                        src={r.createdBy?.profilePic}
                         alt="Reviewer"
                         className="w-10 h-10 rounded-full object-cover border"
                       />

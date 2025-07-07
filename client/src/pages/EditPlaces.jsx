@@ -2,13 +2,13 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { LoaderContext } from "../context/LoaderContext.jsx";
 import axios from "axios";
-import {toast} from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 const EditPlaces = () => {
   const { id } = useParams();
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
-  const { setLoading } = useContext(LoaderContext);
+  const { loading, setLoading } = useContext(LoaderContext);
 
   const [tourType, setTourType] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
@@ -34,18 +34,18 @@ const EditPlaces = () => {
         });
 
         const place = data.data;
-        setTourType(place.tourType);
-        setAdditionalDetails(place.additionalDetails);
-        setTitle(place.title);
-        setDescription(place.description);
-        setAddress(place.address);
+        setTourType(place.tourType || "");
+        setAdditionalDetails(place.additionalDetails || "");
+        setTitle(place.title || "");
+        setDescription(place.description || "");
+        setAddress(place.address || "");
         setExistingPhotos(place.photos || []);
         setPerks(place.perks || []);
-        setExtraInfo(place.extraInfo);
-        setCheckIn(place.checkIn);
-        setCheckOut(place.checkOut);
-        setMaxGuests(place.maxGuests);
-        setPrice(place.price);
+        setExtraInfo(place.extraInfo || "");
+        setCheckIn(place.checkIn || "");
+        setCheckOut(place.checkOut || "");
+        setMaxGuests(place.maxGuests || 1);
+        setPrice(place.price || 0);
       } catch (err) {
         toast.error("Failed to fetch place data.");
         navigate("/account/places");
@@ -86,6 +86,7 @@ const EditPlaces = () => {
 
       if (data.success) {
         toast.success(data.message);
+        setPhotos([]); // Reset photo input
         navigate("/account/places");
       }
     } catch (err) {
@@ -107,11 +108,40 @@ const EditPlaces = () => {
     );
   }
 
+  useEffect(() => {
+    return () => {
+      photos.forEach((file) => URL.revokeObjectURL(file));
+    };
+  }, [photos]);
+
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Edit Accommodation</h2>
 
       <form onSubmit={updatePlace} className="space-y-6">
+        {/* Tour Type */}
+        <div>
+          <label className="block text-gray-600 font-medium">Tour Type</label>
+          <input
+            type="text"
+            value={tourType}
+            onChange={(e) => setTourType(e.target.value)}
+            className="w-full border rounded p-2 mt-1"
+          />
+        </div>
+
+        {/* Additional Details */}
+        <div>
+          <label className="block text-gray-600 font-medium">Additional Details</label>
+          <textarea
+            value={additionalDetails}
+            onChange={(e) => setAdditionalDetails(e.target.value)}
+            className="w-full border rounded p-2 mt-1"
+            rows="2"
+          />
+        </div>
+
         {/* Title */}
         <div>
           <label className="block text-gray-600 font-medium">Title</label>
@@ -147,6 +177,20 @@ const EditPlaces = () => {
           />
         </div>
 
+        {/* Perks */}
+        <div>
+          <label className="block text-gray-600 font-medium">Perks</label>
+          <input
+            type="text"
+            value={perks.join(", ")}
+            onChange={(e) =>
+              setPerks(e.target.value.split(",").map((perk) => perk.trim()))
+            }
+            placeholder="WiFi, Free Parking, Pets Allowed"
+            className="w-full border rounded p-2 mt-1"
+          />
+        </div>
+
         {/* Existing Photos */}
         <div>
           <label className="block text-gray-600 font-medium">Current Photos</label>
@@ -154,7 +198,7 @@ const EditPlaces = () => {
             {existingPhotos.map((photo, i) => (
               <img
                 key={i}
-                src={`${URI}/${photo}`}
+                src={photo}
                 alt="Existing"
                 className="w-28 h-20 object-cover rounded border"
               />
@@ -171,6 +215,18 @@ const EditPlaces = () => {
             onChange={handlePhotoUpload}
             className="mt-2"
           />
+          {photos.length > 0 && (
+            <div className="flex flex-wrap gap-4 mt-4">
+              {Array.from(photos).map((file, i) => (
+                <img
+                  key={i}
+                  src={URL.createObjectURL(file)}
+                  alt="Preview"
+                  className="w-28 h-20 object-cover rounded border"
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Check-in, Check-out, Guests */}
@@ -222,9 +278,10 @@ const EditPlaces = () => {
         <div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200 disabled:opacity-50"
+            disabled={loading}
           >
-            Update Accommodation
+            {loading ? "Updating..." : "Update Accommodation"}
           </button>
         </div>
       </form>

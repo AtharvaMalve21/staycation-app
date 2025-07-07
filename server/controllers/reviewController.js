@@ -44,12 +44,15 @@ exports.createReview = async (req, res) => {
     }
 
     //create review
-    const review = await Review.create({
+    let review = await Review.create({
       body,
       rating,
       createdBy: userId,
       place: placeId,
     });
+
+    // ✅ Populate user info (e.g., name, avatar)
+    review = await review.populate("createdBy", "name avatar");
 
     return res.status(201).json({
       success: true,
@@ -87,7 +90,9 @@ exports.getReviews = async (req, res) => {
       });
     }
 
-    const review = await Review.find({ place: place._id }).populate("createdBy place");
+    const review = await Review.find({ place: place._id }).populate(
+      "createdBy place"
+    );
 
     return res.status(200).json({
       success: true,

@@ -90,10 +90,15 @@ const AdminBooking = () => {
                 </span>
 
                 <img
-                  src={`${URI}/${booking.place.photos[0]}`}
+                  src={
+                    booking.place.photos[0] // Cloudinary style
+                      ? booking.place.photos[0]
+                      : `${URI}/${booking.place.photos[0].replace("\\", "/")}` // fallback for local path
+                  }
                   alt="Place"
                   className="w-full h-60 object-cover rounded-t-2xl"
                 />
+
 
                 <div className="p-5 space-y-4">
                   <div className="flex items-center gap-2 text-gray-700 font-medium">
@@ -103,10 +108,17 @@ const AdminBooking = () => {
 
                   <div className="flex items-center gap-3">
                     <img
-                      src={`${URI}/${booking.user.profilePic}`}
+                      src={
+                        typeof booking.user.profilePic === "string"
+                          ? booking.user.profilePic // Cloudinary (full URL string)
+                          : booking.user.profilePic?.url
+                            ? booking.user.profilePic.url // Cloudinary object
+                            : `${URI}/${booking.user.profilePic?.replace("\\", "/")}` // fallback for local path
+                      }
                       alt="User"
                       className="w-10 h-10 rounded-full object-cover border border-gray-300"
                     />
+
                     <div className="text-sm">
                       <div className="flex items-center gap-1 font-medium text-gray-800">
                         <UserIcon className="h-4 w-4 text-blue-500" />

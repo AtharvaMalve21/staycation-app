@@ -5,7 +5,6 @@ import { UserContext } from "../../context/UserContext";
 import ConfirmModel from "../../components/ConfirmModel.jsx";
 import SearchBar from "../../components/SearchBar.jsx";
 import AdminNav from "../../components/AdminNav.jsx";
-
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -26,10 +25,8 @@ const AdminUsers = () => {
   const genders = ["Male", "Female"];
 
   useEffect(() => {
-    if (selectedGender) {
-      fetchUsersByGender(selectedGender);
-    } else {
-      fetchUsers();
+    if (isLoggedIn) {
+      selectedGender ? fetchUsersByGender(selectedGender) : fetchUsers();
     }
   }, [isLoggedIn, selectedGender]);
 
@@ -73,7 +70,9 @@ const AdminUsers = () => {
       if (data.success) {
         toast.success(data.message);
         setUsers((prev) =>
-          prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u))
+          prev.map((u) =>
+            u._id === userId ? { ...u, role: newRole } : u
+          )
         );
       }
     } catch (err) {
@@ -105,7 +104,7 @@ const AdminUsers = () => {
   };
 
   return (
-    <div className="min-h-screen pb-10">
+    <div className="min-h-screen pb-10 bg-gradient-to-b from-white via-blue-50 to-blue-100">
       <AdminNav />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -113,6 +112,7 @@ const AdminUsers = () => {
           Admin – User Management
         </h1>
 
+        {/* Search Component */}
         <SearchBar setUsers={setUsers} users={users} />
 
         {/* Gender Filter */}
@@ -121,11 +121,10 @@ const AdminUsers = () => {
             <button
               key={gender}
               onClick={() => setSelectedGender(gender)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium shadow transition-all duration-200 ${
-                selectedGender === gender
+              className={`px-5 py-2.5 rounded-full text-sm font-medium shadow transition-all duration-200 ${selectedGender === gender
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-800 border border-gray-300 hover:bg-blue-100"
-              }`}
+                }`}
             >
               {gender}
             </button>
@@ -154,12 +153,13 @@ const AdminUsers = () => {
                   <img
                     src={
                       user.profilePic
-                        ? `${URI}/${user.profilePic}`
+                        ? user.profilePic
                         : "/default-avatar.png"
                     }
                     alt={user.name}
                     className="w-16 h-16 rounded-full border border-gray-300 object-cover"
                   />
+
                   <div>
                     <h2 className="text-lg font-bold text-gray-900">
                       {user.name}
@@ -182,11 +182,11 @@ const AdminUsers = () => {
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => handleRoleToggle(user._id, user.role)}
-                    className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full transition ${
-                      user.role === "admin"
+                    className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full transition ${user.role === "admin"
                         ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
                         : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    }`}
+                      }`}
+                    title="Toggle Role"
                   >
                     {user.role === "admin" ? (
                       <>

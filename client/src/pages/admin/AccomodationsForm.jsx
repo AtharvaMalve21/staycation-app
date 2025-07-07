@@ -13,9 +13,13 @@ const perksList = [
   { label: "Private Entrance", icon: "🚪", name: "entrance" },
 ];
 
+const typeOptions = ["Apartment", "Villa", "Cottage", "Room", "Other"];
+const cancellationPolicies = ["Flexible", "Moderate", "Strict"];
+
 const AccommodationsForm = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [type, setType] = useState("");
   const [address, setAddress] = useState("");
   const [photos, setPhotos] = useState([]);
   const [previewPhotos, setPreviewPhotos] = useState([]);
@@ -27,6 +31,7 @@ const AccommodationsForm = () => {
   const [maxGuests, setMaxGuests] = useState("");
   const [price, setPrice] = useState("");
   const [rules, setRules] = useState("");
+  const [cancellationPolicy, setCancellationPolicy] = useState("Moderate");
 
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
@@ -44,24 +49,26 @@ const AccommodationsForm = () => {
     );
   };
 
-  const addNewPlace = async (ev) => {
-    ev.preventDefault();
+  const addNewPlace = async (e) => {
+    e.preventDefault();
     try {
       setLoading(true);
 
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
+      formData.append("type", type);
       formData.append("address", address);
       photos.forEach((photo) => formData.append("photos", photo));
       formData.append("perks", JSON.stringify(perks));
-      formData.append("amenities", amenities);
+      formData.append("amenities", JSON.stringify(amenities.split(",").map((a) => a.trim())));
       formData.append("extraInfo", extraInfo);
       formData.append("rules", rules);
-      formData.append("checkIn", checkIn);
-      formData.append("checkOut", checkOut);
+      formData.append("checkIn", parseInt(checkIn.split(":")[0]));
+      formData.append("checkOut", parseInt(checkOut.split(":")[0]));
       formData.append("maxGuests", maxGuests);
       formData.append("price", price);
+      formData.append("cancellationPolicy", cancellationPolicy);
 
       const { data } = await axios.post(`${URI}/api/places/add`, formData, {
         headers: {
@@ -99,6 +106,22 @@ const AccommodationsForm = () => {
             placeholder="e.g., Cozy Apartment with View"
             required
           />
+        </div>
+
+        {/* Type */}
+        <div>
+          <label className="form-label">Type</label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="form-input"
+            required
+          >
+            <option value="">Select Type</option>
+            {typeOptions.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
         </div>
 
         {/* Description */}
@@ -176,13 +199,13 @@ const AccommodationsForm = () => {
 
         {/* Amenities */}
         <div>
-          <label className="form-label">Amenities</label>
+          <label className="form-label">Amenities (comma separated)</label>
           <input
             type="text"
             value={amenities}
             onChange={(e) => setAmenities(e.target.value)}
             className="form-input"
-            placeholder="e.g., Gym, Swimming Pool"
+            placeholder="e.g., Gym, Swimming Pool, BBQ"
           />
         </div>
 
@@ -256,6 +279,23 @@ const AccommodationsForm = () => {
           </div>
         </div>
 
+        {/* Cancellation Policy */}
+        <div>
+          <label className="form-label">Cancellation Policy</label>
+          <select
+            value={cancellationPolicy}
+            onChange={(e) => setCancellationPolicy(e.target.value)}
+            className="form-input"
+            required
+          >
+            {cancellationPolicies.map((policy) => (
+              <option key={policy} value={policy}>
+                {policy}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Submit */}
         <button
           type="submit"
@@ -266,7 +306,6 @@ const AccommodationsForm = () => {
       </form>
     </div>
   );
-
 };
 
 export default AccommodationsForm;

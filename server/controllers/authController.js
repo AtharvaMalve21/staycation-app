@@ -22,14 +22,7 @@ const isStrongPassword = (password) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password, gender, phone, role } = req.body;
-    const profilePic = req.file?.path;
-
-    if (!profilePic) {
-      return res.status(400).json({
-        success: false,
-        message: "Profile picture is required to complete registration.",
-      });
-    }
+    const filePath = req.file?.path;
 
     if (!name || !email || !password || !gender || !phone) {
       return res.status(400).json({
@@ -67,25 +60,45 @@ exports.register = async (req, res) => {
       await bcrypt.genSalt(10)
     );
 
-    //upload profilePic to cloudinary
-    const cloudinaryResponse = await cloudinary.uploader.upload(profilePic, {
-      folder: "stay-cation",
-    });
+    let uploadedPic = null;
 
-    //unlink from uploads folder
-    fs.unlinkSync(profilePic);
+    if (filePath) {
+      const cloudinaryResponse = await cloudinary.uploader.upload(filePath, {
+        folder: "stay-cation",
+      });
+
+      uploadedPic = cloudinaryResponse.secure_url;
+
+      try {
+        fs.unlink(filePath, (err) => {
+          if (err)
+            console.error("Failed to delete uploaded file:", err.message);
+        });
+      } catch (err) {
+        console.error("Unlinking error:", err.message);
+      }
+    }
 
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      profilePic: cloudinaryResponse,
+      profilePic: uploadedPic,
       gender,
       role,
       phone,
     });
 
-    await sendVerificationOTP(email);
+    try {
+      await sendVerificationOTP(email);
+    } catch (emailErr) {
+      console.error("OTP sending failed:", emailErr);
+      return res.status(500).json({
+        success: false,
+        message:
+          "Registration successful but failed to send verification email. Please login and try again.",
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -94,7 +107,8 @@ exports.register = async (req, res) => {
         "Registration successful. A verification code has been sent to your email.",
     });
   } catch (err) {
-    res.status(500).json({
+    console.error("Registration error:", err);
+    return res.status(500).json({
       success: false,
       message: "Server error during registration. Please try again later.",
     });

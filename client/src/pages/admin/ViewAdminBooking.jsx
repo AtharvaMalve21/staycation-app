@@ -47,6 +47,9 @@ const ViewAdminBooking = () => {
   };
 
   const updateStatus = async () => {
+    const confirmed = window.confirm("Are you sure you want to update the booking status?");
+    if (!confirmed) return;
+
     try {
       setLoading(true);
       const { data } = await axios.put(
@@ -58,7 +61,6 @@ const ViewAdminBooking = () => {
         toast.success("Booking status updated successfully");
         setBooking(data.data);
         navigate("/admin/bookings");
-        
       }
     } catch (err) {
       toast.error(err.response?.data.message || "Failed to update status");
@@ -73,37 +75,39 @@ const ViewAdminBooking = () => {
 
   const nextSlide = () => {
     setCurrentSlide((prev) =>
-      booking.place.photos ? (prev + 1) % booking.place.photos.length : 0
+      booking?.place?.photos ? (prev + 1) % booking.place.photos.length : 0
     );
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) =>
-      booking.place.photos
+      booking?.place?.photos
         ? (prev - 1 + booking.place.photos.length) % booking.place.photos.length
         : 0
     );
   };
 
-  if (!booking)
+  const statusOptions = ["pending", "confirmed", "completed", "cancelled"];
+
+  if (!booking) {
     return (
       <div className="text-center text-gray-500 text-lg mt-10">
         Booking details loading...
       </div>
     );
-
-  const statusOptions = ["pending", "confirmed", "completed", "cancelled"];
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-10 font-sans">
       {/* Image slider */}
       <div className="relative w-full h-[420px] overflow-hidden rounded-3xl shadow-lg">
-        {booking.place.photos.map((photo, index) => (
+        {booking.place?.photos?.map((photo, index) => (
           <img
             key={index}
-            src={`${URI}/${photo}`}
-            alt=""
-            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
+            src={photo}
+            alt={`Slide ${index + 1}`}
+            className={`absolute w-full h-full object-cover transition-opacity duration-500 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
           />
         ))}
         <button
@@ -119,10 +123,11 @@ const ViewAdminBooking = () => {
           <ChevronRightIcon className="w-5 h-5 text-gray-800" />
         </button>
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-          {booking.place.photos.map((_, index) => (
+          {booking.place?.photos?.map((_, index) => (
             <span
               key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide ? "bg-white" : "bg-white/50 hover:bg-white"}`}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide ? "bg-white" : "bg-white/50 hover:bg-white"
+                }`}
             />
           ))}
         </div>
@@ -130,21 +135,25 @@ const ViewAdminBooking = () => {
 
       {/* Booking & Status Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        {/* Owner Info */}
+        {/* User Info */}
         <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center">
           <img
-            src={`${URI}/${booking.user.profilePic}`}
-            alt="Owner"
+            src={
+              booking.user?.profilePic
+                ? booking.user.profilePic
+                : "/default-avatar.png"
+            }
+            alt="User"
             className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3"
           />
-          <p className="text-lg font-semibold">{booking.user.name}</p>
+          <p className="text-lg font-semibold">{booking.user?.name}</p>
           <div className="flex items-center gap-2 text-gray-600 mt-1">
             <EnvelopeIcon className="w-5 h-5" />
-            <p>{booking.user.email}</p>
+            <p>{booking.user?.email}</p>
           </div>
         </div>
 
-        {/* Booking Info + Status Control */}
+        {/* Booking Info + Status */}
         <div className="md:col-span-2 bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl shadow space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-semibold text-blue-900">
@@ -172,6 +181,22 @@ const ViewAdminBooking = () => {
             </div>
           </div>
 
+          {/* Status Badge */}
+          <div>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${status === "confirmed"
+                ? "bg-green-100 text-green-800"
+                : status === "pending"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : status === "completed"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
             <div className="flex items-center gap-2">
               <UserIcon className="w-5 h-5 text-blue-600" />
@@ -188,13 +213,15 @@ const ViewAdminBooking = () => {
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-blue-600" />
               <p>
-                Check-In: <strong>{new Date(booking.checkIn).toLocaleDateString()}</strong>
+                Check-In:{" "}
+                <strong>{format(new Date(booking.checkIn), "dd MMM yyyy")}</strong>
               </p>
             </div>
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-blue-600" />
               <p>
-                Check-Out: <strong>{new Date(booking.checkOut).toLocaleDateString()}</strong>
+                Check-Out:{" "}
+                <strong>{format(new Date(booking.checkOut), "dd MMM yyyy")}</strong>
               </p>
             </div>
             <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl shadow-sm">
@@ -205,7 +232,8 @@ const ViewAdminBooking = () => {
                 </span>
               </div>
               <div className="text-sm text-gray-500 ml-auto">
-                Booked on: <span className="font-medium">
+                Booked on:{" "}
+                <span className="font-medium">
                   {booking.createdAt
                     ? format(new Date(booking.createdAt), "dd MMM yyyy, hh:mm a")
                     : "Unknown"}

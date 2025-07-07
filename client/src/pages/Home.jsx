@@ -36,8 +36,12 @@ const Home = () => {
           Find the perfect place to relax, recharge, or work remotely — anywhere in the world.
         </p>
         <div className="mt-8 flex justify-center gap-4">
-          <Link to="/places" className="bg-white text-blue-600 px-6 py-2 rounded-md font-semibold hover:bg-blue-50 transition">Explore Stays</Link>
-          <Link to="/register" className="border border-white px-6 py-2 rounded-md font-semibold hover:bg-white hover:text-blue-600 transition">Get Started</Link>
+          <Link to="/places" className="bg-white text-blue-600 px-6 py-2 rounded-md font-semibold hover:bg-blue-50 transition">
+            Explore Stays
+          </Link>
+          <Link to="/register" className="border border-white px-6 py-2 rounded-md font-semibold hover:bg-white hover:text-blue-600 transition">
+            Get Started
+          </Link>
         </div>
       </div>
 
@@ -45,7 +49,7 @@ const Home = () => {
       <section className="py-16 px-6 md:px-20 bg-blue-50">
         <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6">Featured Destinations</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {places.map((place) => (
             <Link
               to={`/places/${place._id}`}
@@ -53,21 +57,31 @@ const Home = () => {
               className="bg-white rounded-2xl shadow-md overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl"
             >
               <img
-                src={`${URI}/${place.photos[Math.floor(Math.random() * place.photos.length)]}`}
+                src={
+                  place.photos?.length > 0
+                    ? place.photos[Math.floor(Math.random() * place.photos.length)]
+                    : "/placeholder.jpg"
+                }
                 alt={place.title}
                 className="h-52 w-full object-cover"
               />
               <div className="p-4 space-y-2">
                 <h2 className="text-xl font-semibold text-gray-800">{place.title}</h2>
-                <p className="text-gray-600 text-sm">{place.description}</p>
+                <p className="text-gray-600 text-sm line-clamp-2">{place.description}</p>
                 <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
                   <MapPinIcon className="w-5 h-5 text-blue-500" />
                   <span>{place.address}</span>
                 </div>
+
+                {/* Owner Info */}
                 <div className="flex items-center gap-3 mt-4">
                   <img
-                    src={`${URI}/${place.owner?.profilePic}`}
-                    alt={place.owner?.name}
+                    src={
+                      place.owner?.profilePic
+                        ? place.owner.profilePic
+                        : "/default-avatar.png"
+                    }
+                    alt={place.owner?.name || "Owner"}
                     className="w-10 h-10 rounded-full object-cover border border-gray-300"
                   />
                   <div>
@@ -82,6 +96,8 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Price */}
                 <div className="pt-4 text-right">
                   <span className="text-xl font-semibold text-green-600">₹{place.price}</span>
                   <span className="text-sm text-gray-500"> /night</span>
@@ -97,7 +113,7 @@ const Home = () => {
         <h2 className="text-2xl font-semibold text-gray-800">Want to list your place?</h2>
         <p className="text-gray-600 mt-2">Earn money by hosting travelers on your own terms.</p>
         <Link
-          to="/account/places/new"
+          to="/user/dashboard"
           className="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
         >
           Become a Host

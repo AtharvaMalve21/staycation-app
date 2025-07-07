@@ -10,34 +10,23 @@ const EditProfile = () => {
   const { user, setUser } = useContext(UserContext);
   const { setLoading } = useContext(LoaderContext);
   const navigate = useNavigate();
-  const URI = import.meta.env.VITE_BACKEND_URI;
 
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [gender, setGender] = useState(user?.gender || "");
-  const [phone, setPhone] = useState(user?.phone || "");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
+  const [phone, setPhone] = useState("");
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [preview, setPreview] = useState("");
 
-  console.log(user);
-
-  // Set initial preview image once user data is available
   useEffect(() => {
     if (user) {
       setName(user.name || "");
+      setEmail(user.email || "");
       setGender(user.gender || "");
       setPhone(user.phone || "");
-      setEmail(user.email || "");
-
-      // ✅ Update here: if profilePic is a string (local path)
-      if (typeof user.profilePic === "string") {
-        setPreview(`${URI}/${user.profilePic.replace("\\", "/")}`);
-      } else if (user.profilePic?.url) {
-        setPreview(user.profilePic.url);
-      }
+      setPreview(user.profilePic ? `${import.meta.env.VITE_BACKEND_URI}/${user.profilePic}` : "");
     }
   }, [user]);
-
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -50,28 +39,28 @@ const EditProfile = () => {
   const updateProfile = async (e) => {
     e.preventDefault();
 
-    if (!gender) {
-      return toast.error("Please select your gender.");
-    }
+    if (!gender) return toast.error("Please select your gender.");
 
     const formData = new FormData();
     formData.append("name", name);
-    formData.append("email", email);
+    formData.append("email", email); // Even though it's read-only, backend may require it
     formData.append("gender", gender);
     formData.append("phone", phone);
-    if (profilePhoto) {
-      formData.append("profilePic", profilePhoto);
-    }
+    if (profilePhoto) formData.append("profilePic", profilePhoto);
 
     try {
       setLoading(true);
-      const { data } = await axios.put(`${URI}/api/users/update-profile`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      });
+      const { data } = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URI}/api/users/update-profile`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
 
       if (data.success) {
-        setUser(data.data);
+        setUser(data.data); // update context
         toast.success(data.message);
         navigate("/account/profile");
       }
@@ -84,7 +73,10 @@ const EditProfile = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4 py-12">
-      <form onSubmit={updateProfile} className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg">
+      <form
+        onSubmit={updateProfile}
+        className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg"
+      >
         <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">Edit Profile</h1>
 
         {/* Profile Picture */}
@@ -117,6 +109,7 @@ const EditProfile = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+            required
           />
         </div>
 
@@ -165,6 +158,7 @@ const EditProfile = () => {
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            placeholder="10-digit number"
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
           />
         </div>

@@ -16,22 +16,25 @@ const AdminPlaces = () => {
   const { places, setPlaces } = useContext(PlaceContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
   const [filterType, setFilterType] = useState("");
-  const [loading, setLoading] = useState(true); // ✅ Loading state
+  const [loading, setLoading] = useState(true);
 
   const fetchPlacesDetails = async () => {
     try {
-      setLoading(true); // start loading
+      setLoading(true);
       const query = filterType ? `?type=${filterType}` : "";
       const { data } = await axios.get(`${URI}/api/places/filter${query}`, {
         withCredentials: true,
       });
+
+      console.log(data);
+
       if (data.success) {
         setPlaces(data.data);
       }
     } catch (err) {
-      console.log(err.response?.data.message);
+      console.error(err.response?.data.message || "Error fetching places.");
     } finally {
-      setLoading(false); // stop loading
+      setLoading(false);
     }
   };
 
@@ -68,12 +71,11 @@ const AdminPlaces = () => {
               className="inline-flex items-center gap-2 bg-rose-500 text-white px-5 py-2.5 rounded-md shadow hover:bg-rose-600 transition transform hover:scale-105 duration-150"
             >
               <PlusIcon className="w-5 h-5" />
-              <span>Add New Accomodation</span>
+              <span>Add New Accommodation</span>
             </Link>
           </div>
         </div>
 
-        {/* ✅ Loader */}
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
@@ -84,10 +86,21 @@ const AdminPlaces = () => {
               <Link
                 to={`/admin/places/${place._id}`}
                 key={place._id}
-                className="bg-white border border-rose-100 rounded-xl overflow-hidden shadow hover:shadow-lg transition-transform transform hover:-translate-y-1"
+                className="relative bg-white border border-rose-100 rounded-xl overflow-hidden shadow hover:shadow-lg transition-transform transform hover:-translate-y-1"
               >
+                {/* Type Badge */}
+                {place.type && (
+                  <span className="absolute top-2 left-2 bg-rose-100 text-rose-600 text-xs font-medium px-3 py-1 rounded-full shadow-sm z-10">
+                    {place.type}
+                  </span>
+                )}
+
                 <img
-                  src={`${URI}/${place.photos[Math.floor(Math.random() * place.photos.length)]}`}
+                  src={
+                    place.photos?.length > 0
+                      ? place.photos[Math.floor(Math.random() * place.photos.length)]
+                      : "/placeholder.jpg"
+                  }
                   alt={place.title}
                   className="h-52 w-full object-cover"
                 />
@@ -107,19 +120,24 @@ const AdminPlaces = () => {
 
                   <div className="flex items-center gap-3 mt-3">
                     <img
-                      src={`${URI}/${place.owner.profilePic}`}
-                      alt={place.owner.name}
+                      src={
+                        place.owner?.profilePic
+                          ? place.owner.profilePic
+                          : "/default-profile.png"
+                      }
+                      alt={place.owner?.name || "Owner"}
                       className="w-10 h-10 rounded-full border object-cover"
                     />
+
                     <div className="text-sm">
-                      <p className="font-medium text-gray-800">{place.owner.name}</p>
+                      <p className="font-medium text-gray-800">{place.owner?.name}</p>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <EnvelopeIcon className="w-4 h-4" />
-                        <span>{place.owner.email}</span>
+                        <span>{place.owner?.email}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <PhoneIcon className="w-4 h-4" />
-                        <span>{place.owner.phone}</span>
+                        <span>{place.owner?.phone}</span>
                       </div>
                     </div>
                   </div>

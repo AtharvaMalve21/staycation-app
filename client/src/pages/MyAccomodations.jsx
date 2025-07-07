@@ -12,25 +12,25 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 
-const MyAccomodations = () => {
+const MyAccommodations = () => {
   const { isLoggedIn } = useContext(UserContext);
   const { places, setPlaces } = useContext(PlaceContext);
-  const { setLoading } = useContext(LoaderContext); // 👈 loader context
+  const { setLoading } = useContext(LoaderContext);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
   const fetchPlacesDetails = async () => {
     try {
-      setLoading(true); // 👈 start loader
-      const { data } = await axios.get(URI + "/api/places", {
+      setLoading(true);
+      const { data } = await axios.get(`${URI}/api/places`, {
         withCredentials: true,
       });
       if (data.success) {
         setPlaces(data.data);
       }
     } catch (err) {
-      console.log(err.response?.data.message);
+      console.log(err.response?.data.message || "Failed to load places");
     } finally {
-      setLoading(false); // 👈 stop loader
+      setLoading(false);
     }
   };
 
@@ -39,7 +39,7 @@ const MyAccomodations = () => {
   }, [isLoggedIn]);
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <NavPlace />
 
       {/* Add New Accommodation Button */}
@@ -64,10 +64,15 @@ const MyAccomodations = () => {
               className="bg-white rounded-2xl shadow-md overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1"
             >
               <img
-                src={`${URI}/${place.photos[Math.floor(Math.random() * place.photos.length)]}`}
+                src={
+                  place.photos?.length > 0
+                    ? place.photos[Math.floor(Math.random() * place.photos.length)]
+                    : "/placeholder.jpg"
+                }
                 alt={place.title}
                 className="h-56 w-full object-cover"
               />
+
 
               <div className="p-4">
                 <h2 className="text-xl font-semibold text-gray-800 line-clamp-1">
@@ -85,8 +90,8 @@ const MyAccomodations = () => {
                 {/* Owner Info */}
                 <div className="flex items-center gap-3 mt-4">
                   <img
-                    src={`${URI}/${place.owner.profilePic}`}
-                    alt={place.owner.name}
+                    src={place.owner?.profilePic || "/default-avatar.png"}
+                    alt={place.owner?.name || "Owner"}
                     className="w-10 h-10 rounded-full object-cover border border-gray-300"
                   />
                   <div>
@@ -126,4 +131,4 @@ const MyAccomodations = () => {
   );
 };
 
-export default MyAccomodations;
+export default MyAccommodations;

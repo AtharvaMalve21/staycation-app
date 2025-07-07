@@ -4,7 +4,6 @@ import Layout from "./pages/Layout.jsx";
 import Login from "./pages/auth/Login.jsx";
 import Register from "./pages/auth/Register.jsx";
 import VerifyAccount from "./pages/auth/VerifyAccount.jsx";
-import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
@@ -82,11 +81,6 @@ const App = () => {
         <Route path="/verify-account" element={
           <AuthRoute>
             <VerifyAccount />
-          </AuthRoute>
-        } />
-        <Route path="/forgot-password" element={
-          <AuthRoute>
-            <ForgotPassword />
           </AuthRoute>
         } />
         <Route path="/reset-password" element={
