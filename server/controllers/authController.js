@@ -163,7 +163,11 @@ exports.login = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
 
     return res.status(200).json({
       success: true,
