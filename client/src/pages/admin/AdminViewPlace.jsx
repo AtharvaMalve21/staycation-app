@@ -159,20 +159,22 @@ const AdminViewPlace = () => {
         </div>
 
         {/* Owner Info */}
-        <div className="flex items-center gap-4 p-4 border rounded-xl bg-gray-50 shadow-sm">
-          <img
-            src={
-              place.owner?.profilePic
-                ? place.owner.profilePic
-                : "/default-avatar.png"
-            }
-            alt="Owner"
-            className="w-14 h-14 rounded-full object-cover border"
-          />
+        <div className="flex items-center gap-4 border p-4 rounded-xl bg-gray-50 shadow-sm">
+          {place.owner?.additionalDetails?.profilePic ? (
+            <img
+              src={place.owner.additionalDetails.profilePic}
+              alt="Owner"
+              className="w-14 h-14 rounded-full object-cover border border-gray-300 shadow transition duration-300 hover:scale-105 hover:shadow-md"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-lg font-semibold text-white shadow transition duration-300 hover:scale-105 hover:shadow-md uppercase">
+              {place.owner?.name?.charAt(0) || "U"}
+            </div>
+          )}
 
           <div>
-            <p className="text-lg font-semibold">{place.owner?.name}</p>
-            <p className="text-gray-500 text-sm">{place.owner?.email}</p>
+            <p className="font-semibold text-gray-800">{place.owner.name}</p>
+            <p className="text-sm text-gray-500">{place.owner.email}</p>
           </div>
         </div>
 
@@ -228,34 +230,44 @@ const AdminViewPlace = () => {
           </div>
 
           {/* Reviews */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-800">Customer Reviews</h2>
-            {loadingReviews ? (
-              <p className="text-gray-500">🔄 Loading reviews...</p>
-            ) : reviews.length > 0 ? (
-              reviews.map((r) => (
-                <div key={r._id} className="relative border bg-gray-50 rounded-xl p-4 shadow-sm">
-                  <p className="text-sm mb-2 mt-2">“{r.body}”</p>
-                  <p className="text-yellow-500 text-sm">⭐ {r.rating}/5</p>
-                  <div className="flex items-center gap-3 mt-3">
-                    <img
-                      src={
-                        r.createdBy?.profilePic
-                          ? r.createdBy.profilePic
-                          : "/default-avatar.png"
-                      }
-                      alt="Reviewer"
-                      className="w-10 h-10 rounded-full object-cover border"
-                    />
-                    <div>
-                      <p className="text-sm font-semibold">{r.createdBy.name}</p>
-                      <p className="text-xs text-gray-500">{r.createdBy.email}</p>
+          <div>
+            <h2 className="text-xl font-bold mb-3 text-gray-800">Reviews</h2>
+            {reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((r) => (
+                  <div key={r._id} className="relative p-4 border rounded-xl bg-gray-50 shadow-sm">
+                    <button
+                      onClick={() => deleteReview(r._id)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                    <p className="text-sm text-gray-700 mb-2">{r.body}</p>
+                    <p className="text-yellow-500 text-sm">⭐ {r.rating}/5</p>
+                    <div className="flex items-center gap-3 mt-3">
+                      {r.createdBy?.additionalDetails?.profilePic ? (
+                        <img
+                          src={r.createdBy.additionalDetails.profilePic}
+                          alt="Reviewer"
+                          className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm transition duration-300 hover:scale-105 hover:shadow-md"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-semibold text-white shadow-md transition duration-300 hover:scale-105 hover:shadow-lg uppercase">
+                          {r.createdBy?.name?.charAt(0) || "U"}
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{r.createdBy.name}</p>
+                        <p className="text-xs text-gray-500">{r.createdBy.additionalDetails?.email}</p>
+                      </div>
                     </div>
+
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-gray-500">No reviews yet.</p>
+              <p className="text-sm text-gray-500 italic">No reviews yet.</p>
             )}
           </div>
         </div>

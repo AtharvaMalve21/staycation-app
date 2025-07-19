@@ -1,4 +1,5 @@
-const User = require("../models/userModel");
+
+const User = require("../models/user.model.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -9,8 +10,6 @@ const {
 } = require("../utils/resetPasswordOTPTemplate");
 const crypto = require("crypto");
 dotenv.config();
-const cloudinary = require("cloudinary").v2;
-const fs = require("fs");
 
 // Password strength validation function
 const isStrongPassword = (password) => {
@@ -21,24 +20,17 @@ const isStrongPassword = (password) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, gender, phone, role } = req.body;
-    const filePath = req.file?.path;
+    const { name, email, password, role } = req.body;
 
-    if (!name || !email || !password || !gender || !phone) {
+    // Validate required fields
+    if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message:
-          "All fields are required: name, email, password, gender, phone",
+        message: "All fields are required: name, email, password.",
       });
     }
 
-    if (phone.length < 10) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid 10-digit phone number.",
-      });
-    }
-
+    // Check for existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -47,6 +39,7 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Enforce strong password
     if (!isStrongPassword(password)) {
       return res.status(400).json({
         success: false,
@@ -55,40 +48,21 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Hash the password
     const hashedPassword = await bcrypt.hash(
       password,
       await bcrypt.genSalt(10)
     );
 
-    let uploadedPic = null;
-
-    if (filePath) {
-      const cloudinaryResponse = await cloudinary.uploader.upload(filePath, {
-        folder: "stay-cation",
-      });
-
-      uploadedPic = cloudinaryResponse.secure_url;
-
-      try {
-        fs.unlink(filePath, (err) => {
-          if (err)
-            console.error("Failed to delete uploaded file:", err.message);
-        });
-      } catch (err) {
-        console.error("Unlinking error:", err.message);
-      }
-    }
-
+    // Create the user
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      profilePic: uploadedPic,
-      gender,
-      role,
-      phone,
+      role: role || "user",
     });
 
+    // Send verification OTP
     try {
       await sendVerificationOTP(email);
     } catch (emailErr) {
@@ -100,6 +74,7 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Final success response
     return res.status(201).json({
       success: true,
       data: newUser,

@@ -26,6 +26,8 @@ import AddPlace from "./pages/admin/AddPlace.jsx";
 import AdminReviews from "./pages/admin/AdminReviews.jsx";
 import EditProfile from "./pages/EditProfile.jsx";
 import ViewAdminBooking from "./pages/admin/ViewAdminBooking.jsx";
+import Payment from "./pages/Payment.jsx";
+import PaymentSuccess from "./pages/PaymentSuccess.jsx";
 
 const App = () => {
 
@@ -94,11 +96,26 @@ const App = () => {
             <UserDashboard />
           </PrivateRoute>
         } />
+
+        <Route path="/payment/:id" element={
+          <PrivateRoute allowedRoles={["user"]}>
+            <Payment />
+          </PrivateRoute>
+        } />
+
+        <Route path="/payment-success" element={
+          <PrivateRoute allowedRoles={["user"]}>
+            <PaymentSuccess />
+          </PrivateRoute>
+        } />
+
         <Route path="/admin/dashboard" element={
           <PrivateRoute allowedRoles={["admin"]}>
             <AdminDashboard />
           </PrivateRoute>
         } />
+
+
 
         <Route path="/account/profile" element={
           <PrivateRoute allowedRoles={["user", "admin"]}>

@@ -1,50 +1,62 @@
 import React, { useState, useContext } from "react";
+import { differenceInCalendarDays, format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast";
-import { useParams, useNavigate } from "react-router-dom";
-import { LoaderContext } from "../context/LoaderContext.jsx"; // ✅ Import global context
+import { UserContext } from "../context/UserContext";
+import { LoaderContext } from "../context/LoaderContext"; // <-- Import LoaderContext
+import { toast } from "react-hot-toast";
 
-const BookingWidget = ({ price }) => {
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [maxGuests, setMaxGuests] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [showContactFields, setShowContactFields] = useState(false);
-
-  const { id } = useParams();
-  const URI = import.meta.env.VITE_BACKEND_URI;
+const BookingWidget = ({ place }) => {
+  const { user } = useContext(UserContext);
+  const { setLoading } = useContext(LoaderContext); // <-- Use setLoading
   const navigate = useNavigate();
 
-  const { setLoading } = useContext(LoaderContext); // ✅ Access global loader
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState(1);
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
 
-  const toggleContactFields = () => setShowContactFields((prev) => !prev);
-
-  const checkInDate = checkIn ? new Date(checkIn) : null;
-  const checkOutDate = checkOut ? new Date(checkOut) : null;
+  const today = format(new Date(), "yyyy-MM-dd");
+  const URI = import.meta.env.VITE_BACKEND_URI;
 
   const numberOfNights =
-    checkInDate && checkOutDate
-      ? Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))
+    checkIn && checkOut
+      ? differenceInCalendarDays(new Date(checkOut), new Date(checkIn))
       : 0;
 
-  const totalAmount =
-    numberOfNights > 0 ? numberOfNights * price * maxGuests : 0;
+  const totalPrice =
+    numberOfNights && guests ? numberOfNights * place.price * guests : 0;
 
-  const addBooking = async (e) => {
-    e.preventDefault();
+  const handleBookNow = async () => {
+    if (!user) {
+      toast.error("Please log in to book.");
+      return;
+    }
 
-    if (numberOfNights <= 0) {
-      return toast.error("Check-out must be after check-in.");
+    if (!checkIn || !checkOut || !name || !email) {
+      toast.error("Please fill in all booking details.");
+      return;
     }
 
     try {
-      setLoading(true); // ✅ Start global loader
+      setLoading(true); // Start loader
+
       const { data } = await axios.post(
-        `${URI}/api/booking/${id}`,
-        { checkIn, checkOut, maxGuests, name, email },
+        `${URI}/api/booking/${place._id}`,
         {
-          headers: { "Content-Type": "application/json" },
+          place: place._id,
+          checkIn,
+          checkOut,
+          guests,
+          name,
+          email,
+          totalPrice,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
           withCredentials: true,
         }
       );
@@ -53,111 +65,91 @@ const BookingWidget = ({ price }) => {
         toast.success(data.message);
         navigate("/account/bookings");
       }
-    } catch (err) {
-      toast.error(err.response?.data.message || "Booking failed");
-      navigate("/login");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Booking failed.");
     } finally {
-      setLoading(false); // ✅ Stop global loader
+      setLoading(false); // Stop loader
     }
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 w-full max-w-md ml-auto sticky top-20">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Book This Stay</h2>
+    <div className="bg-white shadow-md rounded-2xl p-6 sticky top-20 border">
+      <h2 className="text-2xl font-semibold mb-4 text-center">Book This Stay</h2>
 
-      <form onSubmit={addBooking} className="space-y-5">
-        {/* Date Inputs */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700">Check-in</label>
-            <input
-              type="date"
-              value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
-              required
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700">Check-out</label>
-            <input
-              type="date"
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
-              required
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
-            />
-          </div>
-        </div>
+      <div className="text-lg font-medium text-center mb-2">
+        ₹{place.price}
+        <span className="text-gray-500 text-sm"> per night</span>
+      </div>
 
-        {/* Guests */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="text-sm font-medium text-gray-700">Number of Guests</label>
+          <label className="block mb-1">Check-in</label>
           <input
-            type="number"
-            min="1"
-            value={maxGuests}
-            onChange={(e) => setMaxGuests(e.target.value)}
-            required
-            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
+            type="date"
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            min={today}
+            className="w-full border px-4 py-2 rounded-md"
           />
         </div>
+        <div>
+          <label className="block mb-1">Check-out</label>
+          <input
+            type="date"
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+            min={checkIn || today}
+            className="w-full border px-4 py-2 rounded-md"
+          />
+        </div>
+      </div>
 
-        {/* Toggle Contact Info */}
-        <button
-          type="button"
-          onClick={toggleContactFields}
-          className="w-full text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md py-2 transition"
-        >
-          {showContactFields ? "Hide Contact Information" : "Add Contact Information"}
-        </button>
+      <div className="mb-4">
+        <label className="block mb-1">Guests</label>
+        <input
+          type="number"
+          min={1}
+          max={place.maxGuests}
+          value={guests}
+          onChange={(e) => setGuests(Number(e.target.value))}
+          className="w-full border px-4 py-2 rounded-md"
+        />
+      </div>
 
-        {/* Contact Fields */}
-        {showContactFields && (
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">Your Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Your Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500"
-              />
-            </div>
+      {numberOfNights > 0 && (
+        <>
+          <div className="mb-4">
+            <label className="block mb-1">Your Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border px-4 py-2 rounded-md"
+            />
           </div>
-        )}
 
-        {/* Price */}
-        {numberOfNights > 0 && (
-          <div className="text-right mt-2">
-            <p className="text-sm text-gray-600">
-              Total for <strong>{numberOfNights}</strong> nights:
-            </p>
-            <p className="text-xl font-bold text-green-600">₹{totalAmount}</p>
+          <div className="mb-4">
+            <label className="block mb-1">Email Address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border px-4 py-2 rounded-md"
+            />
           </div>
-        )}
 
-        {/* Submit */}
-        {showContactFields && (
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition"
-          >
-            Book Now
-          </button>
-        )}
-      </form>
+          <div className="mb-4 text-center text-lg font-semibold">
+            Total: ₹{totalPrice}
+          </div>
+        </>
+      )}
+
+      <button
+        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+        onClick={handleBookNow}
+      >
+        Book Now
+      </button>
     </div>
   );
 };

@@ -13,8 +13,6 @@ import {
   UserIcon,
   CalendarIcon,
   CurrencyRupeeIcon,
-  PencilIcon,
-  TrashIcon,
 } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
 
@@ -28,40 +26,22 @@ const ViewBooking = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
 
-  const fetchBookingDetails = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axios.get(`${URI}/api/booking/${id}`, {
-        withCredentials: true,
-      });
-      if (data.success) {
-        setBooking(data.data);
-      }
-    } catch (err) {
-      console.log(err.response?.data.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteBooking = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axios.delete(`${URI}/api/booking/${id}`, {
-        withCredentials: true,
-      });
-      if (data.success) {
-        toast.success(data.message);
-        navigate("/account/bookings");
-      }
-    } catch (err) {
-      toast.error(err.response?.data.message || "Failed to delete booking");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchBookingDetails = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(`${URI}/api/booking/${id}`, {
+          withCredentials: true,
+        });
+        if (data.success) {
+          setBooking(data.data);
+        }
+      } catch (err) {
+        console.log(err.response?.data.message);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchBookingDetails();
   }, [isLoggedIn]);
 
@@ -74,8 +54,7 @@ const ViewBooking = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) =>
       booking.place.photos
-        ? (prev - 1 + booking.place.photos.length) %
-        booking.place.photos.length
+        ? (prev - 1 + booking.place.photos.length) % booking.place.photos.length
         : 0
     );
   };
@@ -89,7 +68,7 @@ const ViewBooking = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-10 font-sans">
-      {/* Image slider */}
+      {/* Image Slider */}
       <div className="relative w-full h-[420px] overflow-hidden rounded-3xl shadow-lg">
         {booking.place.photos.map((photo, index) => (
           <img
@@ -112,22 +91,11 @@ const ViewBooking = () => {
         >
           <ChevronRightIcon className="w-5 h-5 text-gray-800" />
         </button>
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-          {booking.place.photos.map((_, index) => (
-            <span
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide
-                  ? "bg-white"
-                  : "bg-white/50 hover:bg-white"
-                }`}
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Place Details */}
+      {/* Details */}
       <div className="space-y-4">
-        <h2 className="text-3xl font-bold text-gray-800 flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-gray-800">
           {booking.place.title}
         </h2>
         <p className="text-gray-600">{booking.place.description}</p>
@@ -157,39 +125,30 @@ const ViewBooking = () => {
         </div>
       </div>
 
-      {/* Grid Layout */}
+      {/* Booking Info Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start relative">
-        {/* Edit + Delete */}
-        <div className="absolute right-0 top-0 flex gap-3 pr-2">
-          <button
-            onClick={() => navigate(`/account/bookings/${booking._id}/edit`)}
-            className="flex items-center gap-1 px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-full text-sm transition"
-          >
-            <PencilIcon className="w-4 h-4" />
-            Edit
-          </button>
-          <button
-            onClick={deleteBooking}
-            className="flex items-center gap-1 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-full text-sm transition"
-          >
-            <TrashIcon className="w-4 h-4" />
-            Delete
-          </button>
-        </div>
-
         {/* Owner Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center">
-          <img
-            src={booking.user.profilePic}
-            alt="Owner"
-            className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3"
-          />
-          <p className="text-lg font-semibold">{booking.user.name}</p>
+        <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center transition duration-300 hover:shadow-lg hover:scale-[1.02]">
+          {booking.user?.additionalDetails?.profilePic ? (
+            <img
+              src={booking.user.additionalDetails.profilePic}
+              alt="User"
+              className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3 shadow-sm hover:shadow-md transition duration-300"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl font-semibold text-white shadow-md mb-3 uppercase transition duration-300 hover:scale-105">
+              {booking.user?.name?.charAt(0) || "U"}
+            </div>
+          )}
+
+          <p className="text-lg font-semibold text-gray-800">{booking.user.name}</p>
+
           <div className="flex items-center gap-2 text-gray-600 mt-1">
             <EnvelopeIcon className="w-5 h-5" />
-            <p>{booking.user.email}</p>
+            <p className="text-sm">{booking.user.email}</p>
           </div>
         </div>
+
 
         {/* Booking Info */}
         <div className="md:col-span-2 bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl shadow space-y-4">
@@ -238,10 +197,7 @@ const ViewBooking = () => {
                 Booked on:{" "}
                 <span className="font-medium">
                   {booking.createdAt
-                    ? format(
-                      new Date(booking.createdAt),
-                      "dd MMM yyyy, hh:mm a"
-                    )
+                    ? format(new Date(booking.createdAt), "dd MMM yyyy, hh:mm a")
                     : "Unknown"}
                 </span>
               </div>
@@ -253,6 +209,28 @@ const ViewBooking = () => {
               </p>
             </div>
           </div>
+
+          {/* Conditional Payment Button */}
+          <div className="mt-6 text-right">
+            {booking.paymentStatus === "paid" ? (
+              <button
+                className="px-6 py-3 bg-green-600 text-white rounded-full shadow cursor-default"
+                disabled
+              >
+                ✅ Paid
+              </button>
+            ) : (
+              <button
+                className="px-6 py-3 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition duration-300"
+                onClick={() => {
+                  navigate(`/payment/${booking._id}`);
+                }}
+              >
+                💳 Pay Online
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

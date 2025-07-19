@@ -1,4 +1,4 @@
-const User = require("../models/userModel");
+const User = require("../models/user.model.js");
 const transporter = require("./sendMailer");
 const dotenv = require("dotenv");
 const { emailVerificationTemplate } = require("./emailVerificationTemplate");

@@ -61,14 +61,14 @@ const Navbar = () => {
           {/* Profile */}
           {user ? (
             <>
-              {user.profilePic ? (
+              {user?.additionalDetails?.profilePic ? (
                 <img
-                  src={user.profilePic}
+                  src={user?.additionalDetails?.profilePic}
                   alt="profile"
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white font-semibold uppercase text-sm">
+                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-medium text-base shadow-md uppercase">
                   {user.name?.charAt(0)}
                 </div>
               )}

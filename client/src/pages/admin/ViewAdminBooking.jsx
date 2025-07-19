@@ -136,20 +136,24 @@ const ViewAdminBooking = () => {
       {/* Booking & Status Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {/* User Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center">
-          <img
-            src={
-              booking.user?.profilePic
-                ? booking.user.profilePic
-                : "/default-avatar.png"
-            }
-            alt="User"
-            className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3"
-          />
-          <p className="text-lg font-semibold">{booking.user?.name}</p>
+        <div className="bg-white rounded-2xl p-6 shadow-md flex flex-col items-center text-center transition duration-300 hover:shadow-lg hover:scale-[1.02]">
+          {booking.user?.additionalDetails?.profilePic ? (
+            <img
+              src={booking.user.additionalDetails.profilePic}
+              alt="User"
+              className="w-24 h-24 object-cover rounded-full border-4 border-blue-500 mb-3 shadow-sm hover:shadow-md transition duration-300"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl font-semibold text-white shadow-md mb-3 uppercase transition duration-300 hover:scale-105">
+              {booking.user?.name?.charAt(0) || "U"}
+            </div>
+          )}
+
+          <p className="text-lg font-semibold text-gray-800">{booking.user.name}</p>
+
           <div className="flex items-center gap-2 text-gray-600 mt-1">
             <EnvelopeIcon className="w-5 h-5" />
-            <p>{booking.user?.email}</p>
+            <p className="text-sm">{booking.user.email}</p>
           </div>
         </div>
 

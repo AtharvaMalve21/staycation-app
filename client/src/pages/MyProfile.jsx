@@ -61,21 +61,26 @@ const MyProfile = () => {
     fetchBookingDetails();
   }, []);
 
+  const profilePic = user?.additionalDetails?.profilePic;
+  const gender = user?.additionalDetails?.gender;
+  const phone = user?.additionalDetails?.phone;
+  const city = user?.additionalDetails?.city;
+
   return (
     <div className="min-h-[calc(100vh-90px)] bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
       <div className="bg-white shadow-2xl rounded-2xl max-w-md w-full p-8 space-y-6 animate-fade-in">
         {/* Profile Image with Badge */}
         <div className="flex justify-center relative">
           <div className="relative">
-            {user?.profilePic ? (
+            {profilePic ? (
               <img
-                src={user.profilePic}
+                src={profilePic}
                 alt="Profile"
                 className="w-28 h-28 rounded-full border-4 border-blue-500 object-cover shadow-md"
               />
             ) : (
               <div className="w-28 h-28 rounded-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold text-3xl shadow-md border-4 border-blue-400">
-                {user?.name?.charAt(0)}
+                {user?.name?.charAt(0).toUpperCase()}
               </div>
             )}
             {user?.isAccountVerified && (
@@ -98,15 +103,21 @@ const MyProfile = () => {
             <span>{user?.email}</span>
           </div>
 
-          {user?.phone && (
+          {phone && (
             <div className="text-sm text-gray-600 flex justify-center items-center gap-2">
               <PhoneIcon className="w-4 h-4" />
-              <span>{user.phone}</span>
+              <span>{phone}</span>
             </div>
           )}
 
-          {user?.gender && (
-            <div className="text-sm text-gray-500 capitalize">Gender: {user.gender}</div>
+          {gender && (
+            <div className="text-sm text-gray-500 capitalize">
+              Gender: {gender}
+            </div>
+          )}
+
+          {city && (
+            <div className="text-sm text-gray-500 capitalize">City: {city}</div>
           )}
         </div>
 
@@ -114,7 +125,8 @@ const MyProfile = () => {
         <div className="text-sm text-gray-700 space-y-1 text-center">
           {user?.role === "user" && (
             <p>
-              <span className="font-medium text-blue-600">{totalBookings}</span> Booking(s) Made
+              <span className="font-medium text-blue-600">{totalBookings}</span>{" "}
+              Booking(s) Made
             </p>
           )}
           <p className="flex justify-center items-center gap-2 text-sm text-gray-500">
@@ -162,7 +174,13 @@ export default MyProfile;
 
 // Logout Icon
 const LogoutIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
+    viewBox="0 0 24 24"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"

@@ -1,7 +1,7 @@
-const Booking = require("../models/bookingModel");
-const Place = require("../models/placesModel");
-const User = require("../models/userModel");
-const Review = require("../models/reviewModel");
+const Booking = require("../models/booking.model.js");
+const Place = require("../models/place.model.js");
+const User = require("../models/user.model.js");
+const Review = require("../models/review.model.js");
 
 // Utility function for role check
 const isAdmin = async (userId) => {
@@ -30,7 +30,8 @@ exports.getAllUsers = async (req, res) => {
     const users = await User.find({})
       .skip(skip)
       .limit(limit)
-      .select("-password");
+      .select("-password")
+      .populate("additionalDetails");
 
     return res.status(200).json({
       success: true,
@@ -148,7 +149,12 @@ exports.getAllPlaces = async (req, res) => {
       });
     }
 
-    const places = await Place.find({}).populate("owner");
+    const places = await Place.find({}).populate({
+      path: "owner",
+      populate: {
+        path: "additionalDetails",
+      },
+    });
 
     return res.status(200).json({
       success: true,
@@ -177,7 +183,12 @@ exports.viewPlace = async (req, res) => {
 
     //find the place
     const { id: placeId } = req.params;
-    const place = await Place.findById(placeId).populate("owner");
+    const place = await Place.find({}).populate({
+      path: "owner",
+      populate: {
+        path: "additionalDetails",
+      },
+    });
     if (!place) {
       return res.status(400).json({
         success: false,
@@ -261,7 +272,13 @@ exports.getAllBookings = async (req, res) => {
     const bookings = await Booking.find({})
       .skip(skip)
       .limit(limit)
-      .populate("user place");
+      .populate({
+        path: "user",
+        populate: {
+          path: "additionalDetails",
+        },
+      })
+      .populate("place");
 
     return res.status(200).json({
       success: true,
@@ -323,58 +340,77 @@ exports.getStats = async (req, res) => {
 exports.getRecentActivities = async (req, res) => {
   try {
     // Fetch recent entries
-    const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5);
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("additionalDetails");
+
     const recentPlaces = await Place.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate("owner", "name");
+      .populate({
+        path: "owner",
+        populate: { path: "additionalDetails" },
+      });
+
     const recentBookings = await Booking.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate("user place", "name");
+      .populate({
+        path: "user",
+        populate: { path: "additionalDetails" },
+      })
+      .populate("place");
+
     const recentReviews = await Review.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate("createdBy place", "name");
+      .populate({
+        path: "createdBy",
+        populate: { path: "additionalDetails" },
+      })
+      .populate("place");
 
     const activities = [];
 
-    // Push user registration activities
+    // User registrations
     recentUsers.forEach((user) =>
       activities.push({
         type: "user",
-        message: `${user.name} registered`,
+        message: `${user.name || "Unknown"} registered`,
         date: user.createdAt,
       })
     );
 
-    // Push place addition activities
+    // New places
     recentPlaces.forEach((place) =>
       activities.push({
         type: "place",
-        message: `${place.owner?.name || "Unknown"} added a new place: ${
-          place.title
-        }`,
+        message: `${
+          place.owner.name || "Unknown"
+        } added a new place: ${place.title}`,
         date: place.createdAt,
       })
     );
 
-    // Push booking activities
+    // Bookings
     recentBookings.forEach((booking) =>
       activities.push({
         type: "booking",
-        message: `${booking.user?.name || "Unknown"} made a booking`,
+        message: `${
+          booking.user.name || "Unknown"
+        } made a booking`,
         date: booking.createdAt,
       })
     );
 
-    // Push review activities
+    // Reviews
     recentReviews.forEach((review) =>
       activities.push({
         type: "review",
-        message: `${review.createdBy?.name || "Unknown"} reviewed ${
-          review.place?.name || "a place"
-        }`,
+        message: `${
+          review.createdBy.name || "Unknown"
+        } reviewed ${review.place?.name || "a place"}`,
         date: review.createdAt,
       })
     );
@@ -546,7 +582,15 @@ exports.getUserReviews = async (req, res) => {
       });
     }
 
-    const reviews = await Review.find({}).populate("createdBy place");
+    const reviews = await Review.find({})
+      .populate({
+        path: "createdBy",
+        populate: {
+          path: "additionalDetails",
+        },
+      })
+      .populate("place");
+
     return res.status(200).json({
       success: true,
       data: reviews,

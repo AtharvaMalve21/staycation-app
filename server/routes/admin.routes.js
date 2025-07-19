@@ -16,9 +16,9 @@ const {
   getRecentActivities,
   getBookingTrends,
   updateBookingStatus,
-} = require("../controllers/adminController");
+} = require("../controllers/admin.controller.js");
 
-const { isAuthenticated, isAuthorized } = require("../middleware/auth");
+const { isAuthenticated, isAuthorized } = require("../middleware/auth.middleware.js");
 
 router.get("/users", isAuthenticated, isAuthorized, getAllUsers);
 router.delete("/users/:id", isAuthenticated, isAuthorized, deleteUser);

@@ -9,9 +9,9 @@ const {
   verifyAccount,
   forgotPassword,
   resetPassword,
-} = require("../controllers/authController");
+} = require("../controllers/auth.controller.js");
 
-const { isAuthenticated } = require("../middleware/auth");
+const { isAuthenticated } = require("../middleware/auth.middleware.js");
 
 
 //Register User

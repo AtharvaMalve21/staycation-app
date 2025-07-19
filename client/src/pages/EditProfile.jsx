@@ -22,9 +22,9 @@ const EditProfile = () => {
     if (user) {
       setName(user.name || "");
       setEmail(user.email || "");
-      setGender(user.gender || "");
-      setPhone(user.phone || "");
-      setPreview(user.profilePic ? `${import.meta.env.VITE_BACKEND_URI}/${user.profilePic}` : "");
+      setGender(user.additionalDetails?.gender || "");
+      setPhone(user.additionalDetails?.phone || "");
+      setPreview(user.additionalDetails?.profilePic || "");
     }
   }, [user]);
 
@@ -42,14 +42,14 @@ const EditProfile = () => {
     if (!gender) return toast.error("Please select your gender.");
 
     const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email); // Even though it's read-only, backend may require it
     formData.append("gender", gender);
     formData.append("phone", phone);
     if (profilePhoto) formData.append("profilePic", profilePhoto);
 
     try {
       setLoading(true);
+
+      // Step 1: Update profile
       const { data } = await axios.put(
         `${import.meta.env.VITE_BACKEND_URI}/api/users/update-profile`,
         formData,
@@ -59,17 +59,25 @@ const EditProfile = () => {
         }
       );
 
-      if (data.success) {
-        setUser(data.data); // update context
-        toast.success(data.message);
-        navigate("/account/profile");
-      }
+      toast.success(data.message);
+
+      // ✅ Step 2: Refetch updated user to ensure full state (profilePic, etc.)
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URI}/api/users/profile`,
+        { withCredentials: true }
+      );
+
+      setUser(res.data.data); // Fully updated user with nested fields
+      navigate("/user/dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Update failed");
+      console.error("Update Error:", err);
+      toast.error(err.response?.data?.message || "Failed to update profile.");
     } finally {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4 py-12">
@@ -155,9 +163,10 @@ const EditProfile = () => {
         <div className="mb-6">
           <label className="text-sm font-medium text-gray-700">Phone</label>
           <input
-            type="text"
+            type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/, ""))}
+            maxLength={10}
             placeholder="10-digit number"
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
           />

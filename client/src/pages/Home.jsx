@@ -29,6 +29,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 text-white py-20 px-6 md:px-20">
         <h1 className="text-4xl md:text-5xl font-bold text-center">Book Your Dream Stay</h1>
@@ -75,15 +76,19 @@ const Home = () => {
 
                 {/* Owner Info */}
                 <div className="flex items-center gap-3 mt-4">
-                  <img
-                    src={
-                      place.owner?.profilePic
-                        ? place.owner.profilePic
-                        : "/default-avatar.png"
-                    }
-                    alt={place.owner?.name || "Owner"}
-                    className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                  />
+                  {place.owner?.additionalDetails?.profilePic ? (
+                    <img
+                      src={place.owner.additionalDetails.profilePic}
+                      alt={place.owner?.name || "Owner"}
+                      className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-medium text-base shadow-md uppercase"
+                    >
+                      {place.owner?.name?.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm font-medium text-gray-700">{place.owner?.name}</p>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -92,10 +97,11 @@ const Home = () => {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <PhoneIcon className="w-4 h-4" />
-                      {place.owner?.phone}
+                      {place.owner?.additionalDetails?.phone || "Not available"}
                     </div>
                   </div>
                 </div>
+
 
                 {/* Price */}
                 <div className="pt-4 text-right">
@@ -106,6 +112,7 @@ const Home = () => {
             </Link>
           ))}
         </div>
+
       </section>
 
       {/* CTA Section */}

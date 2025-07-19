@@ -65,9 +65,12 @@ const Login = () => {
   return (
     <div className="min-h-[calc(100vh-90px)] flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4 py-10">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-3xl font-bold text-center text-[#1e40af] mb-8">
-          Welcome Back
-        </h1>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-blue-700">Welcome Back</h1>
+          <p className="text-sm text-gray-600 mt-2">
+            Log in to manage your bookings, explore new stays, and continue your journey with us.
+          </p>
+        </div>
         <form onSubmit={loginUserAccount} className="space-y-5">
           {/* Email */}
           <div>

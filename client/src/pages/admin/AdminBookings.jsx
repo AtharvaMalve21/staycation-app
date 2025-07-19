@@ -107,17 +107,24 @@ const AdminBooking = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <img
-                      src={
-                        typeof booking.user.profilePic === "string"
-                          ? booking.user.profilePic // Cloudinary (full URL string)
-                          : booking.user.profilePic?.url
-                            ? booking.user.profilePic.url // Cloudinary object
-                            : `${URI}/${booking.user.profilePic?.replace("\\", "/")}` // fallback for local path
-                      }
-                      alt="User"
-                      className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                    />
+                    {booking.user?.additionalDetails?.profilePic ? (
+                      <img
+                        src={
+                          typeof booking.user.additionalDetails.profilePic === "string"
+                            ? booking.user.additionalDetails.profilePic
+                            : booking.user.additionalDetails.profilePic?.url
+                              ? booking.user.additionalDetails.profilePic.url
+                              : `${URI}/${booking.user.additionalDetails.profilePic?.replace("\\", "/")}`
+                        }
+                        alt="User"
+                        className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-medium text-base shadow-md uppercase">
+                        {booking.user?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
 
                     <div className="text-sm">
                       <div className="flex items-center gap-1 font-medium text-gray-800">

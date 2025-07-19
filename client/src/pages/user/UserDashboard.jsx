@@ -81,18 +81,26 @@ const UserDashboard = () => {
 
         {/* Profile Info */}
         <div className="bg-white p-6 rounded-xl shadow-md flex flex-col sm:flex-row items-center gap-6">
-          <img
-            src={user?.profilePic ? user.profilePic : "/default-avatar.png"}
-            alt="Profile"
-            className="w-24 h-24 rounded-full object-cover border border-gray-300 shadow-sm"
-          />
-          <div className="flex-1 space-y-2">
+          {user?.additionalDetails?.profilePic ? (
+            <img
+              src={user.additionalDetails.profilePic}
+              alt="Profile"
+              className="w-24 h-24 rounded-full object-cover border border-gray-300 shadow-md transition-transform duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-semibold text-white shadow-md uppercase transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+              {user?.name?.charAt(0)}
+            </div>
+          )}
+
+
+          <div className="flex-1 space-y-2 text-center sm:text-left">
             <h3 className="text-2xl font-bold">{user?.name}</h3>
-            <p className="text-sm text-gray-600 flex items-center gap-2">
+            <p className="text-sm text-gray-600 flex items-center justify-center sm:justify-start gap-2">
               <EnvelopeIcon className="w-4 h-4" /> {user?.email}
             </p>
-            <p className="text-sm text-gray-600 flex items-center gap-2">
-              <PhoneIcon className="w-4 h-4" /> {user?.phone}
+            <p className="text-sm text-gray-600 flex items-center justify-center sm:justify-start gap-2">
+              <PhoneIcon className="w-4 h-4" /> {user?.additionalDetails?.phone || "N/A"}
             </p>
           </div>
 
@@ -130,7 +138,7 @@ const UserDashboard = () => {
                     <th className="text-left px-4 py-3">Location</th>
                     <th className="text-left px-4 py-3">Date</th>
                     <th className="text-left px-4 py-3">Price</th>
-                    <th className="text-left px-4 py-3">Status</th>
+                    <th className="text-left px-4 py-3">Payment Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -147,12 +155,15 @@ const UserDashboard = () => {
                       </td>
                       <td className="px-4 py-2">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === "confirmed"
+                          className={`px-2 py-1 rounded-full text-xs font-medium
+                    ${booking.paymentStatus === "paid"
                               ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                              : booking.paymentStatus === "unpaid"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-blue-100 text-blue-700"
                             }`}
                         >
-                          {booking.status}
+                          {booking.paymentStatus.charAt(0).toUpperCase() + booking.paymentStatus.slice(1)}
                         </span>
                       </td>
                     </tr>

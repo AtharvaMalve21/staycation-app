@@ -51,10 +51,23 @@ const bookingSchema = new Schema(
   { timestamps: true }
 );
 
+// Validate dates and compute duration in hours
 bookingSchema.pre("save", function (next) {
-  if (this.checkOut <= this.checkIn) {
-    return next(new Error("Check-out date must be after check-in date."));
+  const now = new Date();
+
+  if (this.checkIn < now) {
+    return next(new Error("Check-in date and time must be in the future."));
   }
+
+  if (this.checkOut <= this.checkIn) {
+    return next(new Error("Check-out must be after check-in."));
+  }
+
+  const durationMs = this.checkOut - this.checkIn;
+  const durationHours = durationMs / (1000 * 60 * 60); // ms → hours
+
+  this.durationHours = durationHours;
+
   next();
 });
 

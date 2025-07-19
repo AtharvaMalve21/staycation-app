@@ -1,6 +1,6 @@
-const User = require("../models/userModel");
-const Place = require("../models/placesModel");
-const Review = require("../models/reviewModel");
+const User = require("../models/user.model.js");
+const Place = require("../models/place.model.js");
+const Review = require("../models/review.model.js");
 
 exports.createReview = async (req, res) => {
   try {
@@ -51,8 +51,12 @@ exports.createReview = async (req, res) => {
       place: placeId,
     });
 
-    // ✅ Populate user info (e.g., name, avatar)
-    review = await review.populate("createdBy", "name avatar");
+    review = await review.populate({
+      path: "createdBy",
+      populate: {
+        path: "additionalDetails",
+      },
+    });
 
     return res.status(201).json({
       success: true,
@@ -90,9 +94,17 @@ exports.getReviews = async (req, res) => {
       });
     }
 
-    const review = await Review.find({ place: place._id }).populate(
-      "createdBy place"
-    );
+    const review = await Review.find({ place: place._id }).populate([
+      {
+        path: "createdBy",
+        populate: {
+          path: "additionalDetails",
+        },
+      },
+      {
+        path: "place",
+      },
+    ]);
 
     return res.status(200).json({
       success: true,

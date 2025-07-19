@@ -6,9 +6,9 @@ const {
   getReviews,
   updateReview,
   deleteReview,
-} = require("../controllers/reviewController");
+} = require("../controllers/review.controller.js");
 
-const { isAuthenticated } = require("../middleware/auth");
+const { isAuthenticated } = require("../middleware/auth.middleware.js");
 
 router.post("/:id", isAuthenticated, createReview);
 

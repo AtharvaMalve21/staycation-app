@@ -9,9 +9,9 @@ const {
   viewPlace,
   updatePlace,
   deletePlace,
-} = require("../controllers/placesController");
+} = require("../controllers/place.controller.js");
 
-const { isAuthenticated, isAuthorized } = require("../middleware/auth");
+const { isAuthenticated, isAuthorized } = require("../middleware/auth.middleware.js");
 
 // Admin-only: Create a new place
 router.post(

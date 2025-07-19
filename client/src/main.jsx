@@ -8,6 +8,7 @@ import { LoaderContextProvider } from "./context/LoaderContext.jsx";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
+import StripeProvider from "./context/StripeProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -16,7 +17,9 @@ createRoot(document.getElementById("root")).render(
         <BookingContextProvider>
           <ReviewsContextProvider>
             <LoaderContextProvider>
-              <App />
+              <StripeProvider>
+                <App />
+              </StripeProvider>
             </LoaderContextProvider>
           </ReviewsContextProvider>
         </BookingContextProvider>

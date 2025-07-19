@@ -114,15 +114,24 @@ const AdminReviews = () => {
 
                   {/* Reviewer Info */}
                   <div className="flex items-center gap-3 mt-4">
-                    <img
-                      src={
-                        r.createdBy?.profilePic
-                          ? r.createdBy.profilePic
-                          : "/default-profile.png"
-                      }
-                      alt={r.createdBy?.name || "Reviewer"}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                    />
+                    {r.createdBy?.additionalDetails?.profilePic ? (
+                      <img
+                        src={
+                          typeof r.createdBy.additionalDetails.profilePic === "string"
+                            ? r.createdBy.additionalDetails.profilePic
+                            : r.createdBy.additionalDetails.profilePic?.url
+                              ? r.createdBy.additionalDetails.profilePic.url
+                              : `${URI}/${r.createdBy.additionalDetails.profilePic?.replace("\\", "/")}`
+                        }
+                        alt={r.createdBy?.name || "Reviewer"}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-medium text-base shadow-md uppercase">
+                        {r.createdBy?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
 
                     <div>
                       <p className="text-sm font-medium text-gray-800">

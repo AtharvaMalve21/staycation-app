@@ -3,16 +3,17 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const connectDB = require("./config/db");
-const connectToCloudinary = require("./config/cloudinary");
+const connectDB = require("./config/db.config.js");
+const connectToCloudinary = require("./config/cloudinary.config.js");
 
 //route handlers
-const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
-const placesRoutes = require("./routes/placesRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const AdminRoutes = require("./routes/admin.routes");
+const authRoutes = require("./routes/auth.routes.js");
+const userRoutes = require("./routes/user.routes.js");
+const placesRoutes = require("./routes/place.routes.js");
+const bookingRoutes = require("./routes/booking.routes.js");
+const reviewRoutes = require("./routes/review.routes.js");
+const AdminRoutes = require("./routes/admin.routes.js");
+const paymentRoutes = require("./routes/payment.routes.js");
 
 dotenv.config();
 const app = express();
@@ -43,9 +44,10 @@ app.use("/api/places", placesRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", AdminRoutes);
+app.use("/api/payment",paymentRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ message: "Mern Booking App" });
+  res.json({ message: "StayCation App!" });
 });
 
 app.get("/health", (req, res) => {

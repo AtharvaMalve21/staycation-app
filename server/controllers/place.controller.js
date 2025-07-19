@@ -1,7 +1,7 @@
-const Place = require("../models/placesModel");
-const User = require("../models/userModel");
-const Booking = require("../models/bookingModel");
-const Review = require("../models/reviewModel");
+const Place = require("../models/place.model.js");
+const User = require("../models/user.model.js");
+const Booking = require("../models/booking.model.js");
+const Review = require("../models/review.model.js");
 const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 
@@ -155,10 +155,16 @@ exports.getAllPlaces = async (req, res) => {
 
     const totalPlaces = await Place.countDocuments();
     const places = await Place.find({})
-      .populate("owner")
+      .populate({
+        path: "owner",
+        populate: {
+          path: "additionalDetails",
+        },
+      })
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }); // newest first
+      .sort({ createdAt: -1 });
+    // newest first
 
     return res.status(200).json({
       success: true,
@@ -180,7 +186,12 @@ exports.getAllPlaces = async (req, res) => {
 exports.viewPlace = async (req, res) => {
   try {
     const { id } = req.params;
-    const place = await Place.findById(id).populate("owner");
+    const place = await Place.findById(id).populate({
+      path: "owner",
+      populate: {
+        path: "additionalDetails",
+      },
+    });
     if (!place) {
       return res.status(404).json({
         success: false,
@@ -211,7 +222,13 @@ exports.filterPlaces = async (req, res) => {
       filter.type = new RegExp(`^${type}$`, "i");
     }
 
-    const places = await Place.find(filter).populate("owner").lean();
+    const places = await Place.find(filter)
+      .populate({
+        path: "owner",
+        populate: {
+          path: "additionalDetails",
+        },
+      }).lean();
 
     return res.status(200).json({
       success: true,

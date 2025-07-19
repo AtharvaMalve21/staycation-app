@@ -1,69 +1,55 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import axios from "axios";
-import toast from "react-hot-toast";
-import {
-  EyeIcon,
-  EnvelopeIcon,
-  EyeSlashIcon,
-  PhoneIcon,
-} from "@heroicons/react/24/outline";
-import { LockClosedIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 import { UserContext } from "../../context/UserContext.jsx";
-import { LoaderContext } from "../../context/LoaderContext.jsx";
+import { LoaderContext } from "../../context/LoaderContext.jsx"; // ✅ Import loader context
+import {
+  EnvelopeIcon,
+  UserIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  LockClosedIcon,
+} from "@heroicons/react/24/outline";
 
 const Register = () => {
-  const { setUser } = useContext(UserContext);
-  const { setLoading } = useContext(LoaderContext);
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [gender, setGender] = useState("");
-  const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("");
-  const [profilePhoto, setProfilePhoto] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-
   const navigate = useNavigate();
+  const { setUser, setIsLoggedIn } = useContext(UserContext);
+  const { loading, setLoading } = useContext(LoaderContext); // ✅ Use loader context
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
   const URI = import.meta.env.VITE_BACKEND_URI;
 
-  const togglePassword = () => setShowPassword((prev) => !prev);
+  const togglePassword = () => setShowPassword(!showPassword);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProfilePhoto(file);
-      setPreviewImage(URL.createObjectURL(file));
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const registerUser = async (e) => {
     e.preventDefault();
+    const { name, email, password, role } = formData;
 
-    if (!gender || !role) {
-      toast.error("Please select all required fields.");
+    if (!role) {
+      toast.error("Please select a role.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("password", password);
-    formData.append("gender", gender);
-    formData.append("phone", phone);
-    formData.append("role", role);
-    if (profilePhoto) {
-      formData.append("profilePic", profilePhoto);
-    }
-
     try {
-      setLoading(true);
-      const { data } = await axios.post(`${URI}/api/auth/register`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      });
+      setLoading(true); // ✅ Trigger global loader
+      const { data } = await axios.post(
+        `${URI}/api/auth/register`,
+        { name, email, password, role },
+        { withCredentials: true }
+      );
 
       if (data.success) {
         setUser(data.data);
@@ -76,194 +62,142 @@ const Register = () => {
       console.error("Registration Error:", errorMsg);
       toast.error(errorMsg);
     } finally {
-      setLoading(false);
+      setLoading(false); // ✅ Turn off loader
     }
   };
 
   return (
     <div className="min-h-[calc(100vh-90px)] flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 px-4 py-10">
-      <form
-        onSubmit={registerUser}
-        className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg"
-      >
-        <h1 className="text-2xl font-bold mb-6 text-center text-[#1e40af]">
-          Create an Account
-        </h1>
-
-        {/* Profile Photo Upload */}
-        <div className="flex justify-center mb-4">
-          <label htmlFor="profilePhoto" className="cursor-pointer relative group">
-            {previewImage ? (
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="w-20 h-20 rounded-full object-cover border-4 border-blue-400 shadow-md"
-              />
-            ) : name ? (
-              <div className="w-20 h-20 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 text-3xl font-semibold shadow-md border-4 border-blue-100">
-                {name[0].toUpperCase()}
-              </div>
-            ) : (
-              <UserCircleIcon className="w-20 h-20 text-gray-400" />
-            )}
-            <input
-              id="profilePhoto"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            <span className="absolute bottom-0 right-0 text-[10px] bg-black text-white px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition">
-              Edit
-            </span>
-          </label>
+      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg">
+        {/* Heading */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-blue-700">Create Your Account</h1>
+          <p className="text-sm text-gray-600 mt-2">
+            Join us to explore amazing stays and host your own!
+          </p>
         </div>
 
-        {/* Name + Email */}
-        <div className="flex gap-4 mb-4">
-          <div className="w-1/2">
-            <label htmlFor="name" className="text-sm font-medium text-gray-700">
+        <form onSubmit={registerUser} className="space-y-5">
+          {/* Full Name */}
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
               Name
             </label>
-            <div className="relative mt-1">
-              <UserCircleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <div className="mt-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
+              <UserIcon className="w-5 h-5 text-gray-500" />
               <input
                 type="text"
                 id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
                 required
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 border border-gray-300 rounded-md py-1.5 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-400 outline-none"
+                className="w-full outline-none bg-transparent"
+                placeholder="Enter Full Name"
               />
             </div>
           </div>
 
-          <div className="w-1/2">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
-            <div className="relative mt-1">
-              <EnvelopeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <div className="mt-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
+              <EnvelopeIcon className="w-5 h-5 text-gray-500" />
               <input
                 type="email"
                 id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 required
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 border border-gray-300 rounded-md py-1.5 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-400 outline-none"
+                className="w-full outline-none bg-transparent"
+                placeholder="your@email.com"
               />
             </div>
           </div>
-        </div>
 
-        {/* Password */}
-        <div className="mb-4">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <div className="mt-1 flex items-center gap-2 border border-gray-300 rounded-md px-3 py-1.5 text-sm">
-            <LockClosedIcon className="w-4 h-4 text-gray-500" />
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full bg-transparent text-sm placeholder:text-gray-400 outline-none"
-            />
-            <button type="button" onClick={togglePassword}>
-              {showPassword ? (
-                <EyeSlashIcon className="w-4 h-4 text-gray-600" />
-              ) : (
-                <EyeIcon className="w-4 h-4 text-gray-600" />
-              )}
-            </button>
-          </div>
-          <small className="text-xs text-gray-500 mt-1 block">
-            8+ chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character
-          </small>
-        </div>
-
-        {/* Gender + Phone */}
-        <div className="flex gap-4 mb-4">
-          <div className="w-1/2">
-            <label className="block text-sm font-medium text-gray-700">Gender</label>
-            <div className="flex gap-2 mt-1 text-sm">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Male"
-                  checked={gender === "Male"}
-                  onChange={(e) => setGender(e.target.value)}
-                />
-                Male
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Female"
-                  checked={gender === "Female"}
-                  onChange={(e) => setGender(e.target.value)}
-                />
-                Female
-              </label>
-            </div>
-          </div>
-          <div className="w-1/2">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              Phone
+          {/* Password */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
             </label>
-            <div className="relative">
-              <PhoneIcon className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <div className="mt-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
+              <LockClosedIcon className="w-5 h-5 text-gray-500" />
               <input
-                type="text"
-                id="phone"
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-7 border border-gray-300 rounded-md py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-400 outline-none transition-all duration-150"
-                placeholder="Enter your phone number"
+                className="w-full outline-none bg-transparent"
+                placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={togglePassword}
+                className="focus:outline-none text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeSlashIcon className="w-5 h-5" />
+                ) : (
+                  <EyeIcon className="w-5 h-5" />
+                )}
+              </button>
             </div>
+            <Link
+              to="/reset-password"
+              className="float-right text-xs text-indigo-700 hover:text-blue-600 cursor-pointer transition-all duration-150 underline-offset-2 hover:underline active:text-blue-800"
+            >
+              Forgot Password?
+            </Link>
           </div>
-        </div>
 
-        {/* Role */}
-        <div className="mb-6">
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
-          <select
-            id="role"
-            required
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+          {/* Role */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Select Role</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            >
+              <option value="">Choose your role</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
           >
-            <option value="" disabled>Select a role</option>
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm"
-        >
-          Register
-        </button>
-
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Already a user?{" "}
-          <Link to="/login" className="text-blue-500 hover:underline">
-            Login now...
+        {/* Footer */}
+        <p className="text-center mt-5 text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600 hover:underline font-medium">
+            Login
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 };

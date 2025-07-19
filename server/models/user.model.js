@@ -18,20 +18,14 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    gender: {
-      type: String,
-      enum: ["Male", "Female"],
-    },
-    phone: {
-      type: String,
-    },
-    profilePic: {
-      type: String,
-    },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
+    },
+    additionalDetails: {
+      type: Schema.Types.ObjectId,
+      ref: "Profile",
     },
     isAccountVerified: {
       type: Boolean,

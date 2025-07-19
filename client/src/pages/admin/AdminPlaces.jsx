@@ -119,15 +119,17 @@ const AdminPlaces = () => {
                   </div>
 
                   <div className="flex items-center gap-3 mt-3">
-                    <img
-                      src={
-                        place.owner?.profilePic
-                          ? place.owner.profilePic
-                          : "/default-profile.png"
-                      }
-                      alt={place.owner?.name || "Owner"}
-                      className="w-10 h-10 rounded-full border object-cover"
-                    />
+                    {place?.owner?.additionalDetails?.profilePic ? (
+                      <img
+                        src={place?.owner?.additionalDetails?.profilePic}
+                        alt="profile"
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-medium text-base shadow-md uppercase">
+                        {place.owner.name?.charAt(0)}
+                      </div>
+                    )}
 
                     <div className="text-sm">
                       <p className="font-medium text-gray-800">{place.owner?.name}</p>
@@ -137,7 +139,10 @@ const AdminPlaces = () => {
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <PhoneIcon className="w-4 h-4" />
-                        <span>{place.owner?.phone}</span>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{" "}
+                          {place.owner.additionalDetails?.phone || "N/A"}
+                        </p>
                       </div>
                     </div>
                   </div>

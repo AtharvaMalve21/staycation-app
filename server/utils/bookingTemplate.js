@@ -1,47 +1,52 @@
-exports.bookingTemplate = (n1, e1, n2, e2, tp, checkIn, checkOut) => {
+exports.bookingTemplate = (
+  userName,
+  userEmail,
+  guestName,
+  guestEmail,
+  totalPrice,
+  checkIn,
+  checkOut
+) => {
   return `
-    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background-color: #f9f9f9; color: #333;">
-      <div style="max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <h2 style="color: #0d6efd; text-align: center; margin-bottom: 20px;">🎉 Booking Confirmed!</h2>
+    <div style="font-family: 'Segoe UI', sans-serif; color: #333; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 10px;">
+      <h2 style="color: #4CAF50; text-align: center;">🎉 Booking Confirmed!</h2>
+      
+      <p>Hi <strong>${userName}</strong>,</p>
 
-        <p style="font-size: 16px;">
-          Hello <strong>${n1}</strong>,
-        </p>
-        <p style="font-size: 15px; margin-bottom: 25px;">
-          Your booking has been successfully confirmed! Below are your booking details:
-        </p>
+      <p>Thank you for booking with us. Here are your booking details:</p>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tbody>
-            <tr style="background-color: #f1f1f1;">
-              <td style="padding: 12px; font-weight: bold;">Booked By</td>
-              <td style="padding: 12px;">${n1} (${e1})</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px; font-weight: bold; background-color: #f1f1f1;">Accompanying Guest</td>
-              <td style="padding: 12px;">${n2} (${e2})</td>
-            </tr>
-            <tr style="background-color: #eaf4ea;">
-              <td style="padding: 12px; font-weight: bold;">Total Price</td>
-              <td style="padding: 12px; font-weight: bold;">₹${tp}</td>
-            </tr>
-            <tr style="background-color: #f1f1f1;">
-              <td style="padding: 12px; font-weight: bold;">Check-in Date</td>
-              <td style="padding: 12px;">${checkIn}</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px; font-weight: bold; background-color: #f1f1f1;">Check-out Date</td>
-              <td style="padding: 12px;">${checkOut}</td>
-            </tr>
-          </tbody>
-        </table>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">👤 Guest Name:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${guestName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">📧 Guest Email:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${guestEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">📅 Check-in:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${new Date(checkIn).toLocaleDateString()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">📅 Check-out:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${new Date(checkOut).toLocaleDateString()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">💰 Total Price:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">₹${totalPrice}</td>
+        </tr>
+      </table>
 
-        <p style="font-size: 15px; margin-top: 10px;">Thank you for choosing us! We look forward to hosting you.</p>
+      <p style="margin-top: 20px;">If you have any questions or need to make changes, feel free to reply to this email.</p>
 
-        <p style="font-size: 13px; color: #777; margin-top: 40px; text-align: center;">
-          This is an automated email. Please do not reply to this message.
-        </p>
-      </div>
+      <p style="margin-top: 30px;">Safe travels,</p>
+      <p><strong>The Staycation Team</strong></p>
+
+      <hr style="margin-top: 40px;" />
+      <p style="font-size: 12px; color: #777; text-align: center;">
+        This is an automated email – please do not reply directly to this message.
+      </p>
     </div>
   `;
 };

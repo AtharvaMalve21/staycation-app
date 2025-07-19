@@ -18,7 +18,7 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  display: none;
 }
 
 .form-input {
@@ -28,7 +28,6 @@ body {
 .form-textarea {
   @apply w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring focus:border-blue-400;
 }
-
 
 ::-webkit-scrollbar-track {
   background: #f1f5f9; /* gray-100 */
@@ -42,4 +41,12 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: #f800571e; /* blue-600 */
+}
+
+.input {
+  @apply border border-gray-300 rounded-md p-2 w-full;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700;
 }
