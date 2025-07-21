@@ -48,7 +48,6 @@ const Payment = () => {
               bookingId={id}
               clientSecret={clientSecret}
               onSuccess={() => {
-                toast.success("Payment successful!");
                 navigate("/payment-success");
               }}
             />
