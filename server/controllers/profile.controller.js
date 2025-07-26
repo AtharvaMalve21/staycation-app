@@ -1,13 +1,7 @@
 const User = require("../models/user.model.js");
-
 const Booking = require("../models/booking.model.js");
-
-const Review = require("../models/review.model.js");
-
 const fs = require("fs");
-
 const cloudinary = require("cloudinary").v2;
-
 const Profile = require("../models/profile.model.js");
 
 exports.getUserProfile = async (req, res) => {
@@ -46,21 +40,21 @@ exports.updateUserProfile = async (req, res) => {
     const userId = req.user._id;
 
     const user = await User.findById(userId).populate("additionalDetails");
-
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User profile not found. Please log in again.",
+        message: "User not found. Please log in again.",
       });
     }
 
     const { gender, phone } = req.body;
     const profilePic = req.file?.path;
 
-    if (phone && phone.length !== 10) {
+    // Validate phone
+    if (phone && !/^\d{10}$/.test(phone)) {
       return res.status(400).json({
         success: false,
-        message: "Phone number must be of 10 digits.",
+        message: "Phone number must be exactly 10 digits.",
       });
     }
 
@@ -69,12 +63,18 @@ exports.updateUserProfile = async (req, res) => {
       cloudinaryResponse = await cloudinary.uploader.upload(profilePic, {
         folder: "stay-cation/users",
       });
-      fs.unlinkSync(profilePic);
+
+      // Delete local file after upload
+      if (fs.existsSync(profilePic)) {
+        fs.unlinkSync(profilePic);
+      }
     }
 
     let updatedProfile;
+    let isNewProfile = false;
 
     if (user.additionalDetails) {
+      // Update existing profile
       const profile = await Profile.findById(user.additionalDetails._id);
 
       profile.gender = gender || profile.gender;
@@ -83,10 +83,11 @@ exports.updateUserProfile = async (req, res) => {
 
       updatedProfile = await profile.save();
     } else {
+      // Create new profile
       if (!gender || !phone) {
         return res.status(400).json({
           success: false,
-          message: "All fields are required to create a profile.",
+          message: "Gender and phone are required to create a profile.",
         });
       }
 
@@ -97,9 +98,12 @@ exports.updateUserProfile = async (req, res) => {
       });
 
       user.additionalDetails = updatedProfile._id;
+      await user.save();
+
+      isNewProfile = true;
     }
 
-    const updatedUser = await user.save();
+    // Fetch the latest user profile to return
     const fullUser = await User.findById(user._id)
       .populate("additionalDetails")
       .select("-password");
@@ -110,14 +114,15 @@ exports.updateUserProfile = async (req, res) => {
         user: fullUser,
         profile: updatedProfile,
       },
-      message: user.additionalDetails
-        ? "Profile updated successfully."
-        : "Profile created successfully.",
+      message: isNewProfile
+        ? "Profile created successfully."
+        : "Profile updated successfully.",
     });
   } catch (err) {
+    console.error("Update profile error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message || "Something went wrong.",
+      message: "Failed to update profile. Please try again later.",
     });
   }
 };
