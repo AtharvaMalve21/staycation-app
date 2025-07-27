@@ -1,4 +1,4 @@
-# 🏨 Booking App
+# 🏨 Scalable MERN Stack Hotel Booking Platform with Real-Time Validation & Secure Payment Integration
 
 A full-stack hotel and resort booking platform built using the **MERN stack**. This application allows users to browse accommodations, make bookings, leave reviews, and manage their reservations. Admins and property owners can manage listings, view bookings, and moderate user reviews.
 
