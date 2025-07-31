@@ -6,7 +6,7 @@ const Navbar = () => {
   const { user } = useContext(UserContext);
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 shadow-md bg-white sticky top-0 z-50">
+    <div className="flex items-center justify-between px-6 py-4 shadow-md top-0 z-50">
       {/* Left Logo */}
       <Link to="/" className="flex items-center space-x-2">
         <img src="/airbnb.png" alt="airbnb" className="w-8 h-8" />

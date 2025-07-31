@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { LoaderContext } from "../../context/LoaderContext";
+import Loader from "../../components/Loader.jsx"
 
 const perksList = [
   { label: "Wifi", icon: "📶", name: "wifi" },
@@ -35,7 +36,7 @@ const AccommodationsForm = () => {
 
   const URI = import.meta.env.VITE_BACKEND_URI;
   const navigate = useNavigate();
-  const { setLoading } = useContext(LoaderContext);
+  const { loading, setLoading } = useContext(LoaderContext);
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -90,6 +91,9 @@ const AccommodationsForm = () => {
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-xl mt-10 space-y-10">
+      {
+        loading && <Loader />
+      }
       <h2 className="text-3xl md:text-4xl font-bold text-red-700 text-center">
         Add New Accommodation
       </h2>

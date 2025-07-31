@@ -211,22 +211,34 @@ const ViewBooking = () => {
           </div>
 
           {/* Conditional Payment Button */}
-          <div className="mt-6 text-right">
+          <div className="mt-8 flex justify-end">
             {booking.paymentStatus === "paid" ? (
-              <button
-                className="px-6 py-3 bg-green-600 text-white rounded-full shadow cursor-default"
-                disabled
-              >
-                ✅ Paid
-              </button>
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-800 rounded-xl font-semibold shadow-sm">
+                <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span>Payment Completed</span>
+              </div>
             ) : (
               <button
-                className="px-6 py-3 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition duration-300"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50 active:scale-95"
                 onClick={() => {
                   navigate(`/payment/${booking._id}`);
                 }}
+                aria-label="Proceed to payment"
               >
-                💳 Pay Online
+                <div className="flex items-center justify-center w-6 h-6 bg-white bg-opacity-20 rounded-lg group-hover:bg-opacity-30 transition-all duration-300">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span>Pay Securely Online</span>
+                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </button>
             )}
           </div>

@@ -51,7 +51,7 @@ const EditProfile = () => {
 
       // Step 1: Update profile
       const { data } = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URI}/api/users/update-profile`,
+        `${user?.role === 'user' ? `${import.meta.env.VITE_BACKEND_URI}/api/users/update-profile` : `${import.meta.env.VITE_BACKEND_URI}/api/admin/update-profile`}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -68,7 +68,7 @@ const EditProfile = () => {
       );
 
       setUser(res.data.data); // Fully updated user with nested fields
-      navigate("/user/dashboard");
+      navigate(`${user?.role === 'user' ? '/user/dashboard' : '/admin/dasboard'}`);
     } catch (err) {
       console.error("Update Error:", err);
       toast.error(err.response?.data?.message || "Failed to update profile.");

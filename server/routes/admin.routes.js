@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../utils/fileUploader.js");
 
 const {
   getAllUsers,
@@ -16,9 +17,13 @@ const {
   getRecentActivities,
   getBookingTrends,
   updateBookingStatus,
+  updateAdminProfile,
 } = require("../controllers/admin.controller.js");
 
-const { isAuthenticated, isAuthorized } = require("../middleware/auth.middleware.js");
+const {
+  isAuthenticated,
+  isAuthorized,
+} = require("../middleware/auth.middleware.js");
 
 router.get("/users", isAuthenticated, isAuthorized, getAllUsers);
 router.delete("/users/:id", isAuthenticated, isAuthorized, deleteUser);
@@ -33,6 +38,14 @@ router.get("/places", isAuthenticated, isAuthorized, getAllPlaces);
 router.get("/reviews", isAuthenticated, isAuthorized, getUserReviews);
 router.get("/admin/places/:id", isAuthenticated, isAuthorized, viewPlace);
 router.get("/bookings", isAuthenticated, isAuthorized, getAllBookings);
+router.put(
+  "/update-profile",
+  upload.single("profilePic"),
+  isAuthenticated,
+  isAuthorized,
+  updateAdminProfile
+);
+
 router.put("/verify-place/:id", isAuthenticated, isAuthorized, verifyPlace);
 router.put(
   "/bookings/:id/status",

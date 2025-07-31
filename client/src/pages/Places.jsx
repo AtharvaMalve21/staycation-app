@@ -66,32 +66,6 @@ const Places = () => {
                   <span className="truncate">{place.address}</span>
                 </div>
 
-                <div className="flex items-center gap-3 mt-4">
-                  {place.owner?.additionalDetails?.profilePic ? (
-                    <img
-                      src={place.owner.additionalDetails.profilePic}
-                      alt={place.owner.name}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow transition duration-300 hover:scale-105 hover:shadow-md"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold text-sm flex items-center justify-center uppercase border border-gray-300 shadow transition duration-300 hover:scale-105 hover:shadow-md">
-                      {place.owner?.name?.charAt(0) || "U"}
-                    </div>
-                  )}
-
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">{place.owner.name}</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <EnvelopeIcon className="w-4 h-4" />
-                      <span>{place.owner.email}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <PhoneIcon className="w-4 h-4" />
-                      <span>{place.owner.additionalDetails?.phone || "N/A"}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="pt-4 text-right">
                   <span className="text-xl font-semibold text-green-600">
                     ₹{place.price}

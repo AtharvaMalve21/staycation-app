@@ -4,8 +4,7 @@ import AdminNav from "../../components/AdminNav.jsx";
 
 const AddPlace = () => {
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <AdminNav />
+    <div className="min-h-screen pb-20">
       <AccommodationsForm />
     </div>
   );

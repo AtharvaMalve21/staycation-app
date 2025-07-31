@@ -67,7 +67,7 @@ const MyProfile = () => {
   const city = user?.additionalDetails?.city;
 
   return (
-    <div className="min-h-[calc(100vh-90px)] bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
+    <div className="flex items-center justify-center px-4">
       <div className="bg-white shadow-2xl rounded-2xl max-w-md w-full p-8 space-y-6 animate-fade-in">
         {/* Profile Image with Badge */}
         <div className="flex justify-center relative">

@@ -18,7 +18,6 @@ import Places from "./pages/Places.jsx";
 import ViewPlace from "./pages/ViewPlace.jsx";
 import MyBooking from "./pages/MyBooking.jsx";
 import ViewBooking from "./pages/ViewBooking.jsx";
-import AdminUsers from "./pages/admin/AdminUsers.jsx"
 import AdminPlaces from "./pages/admin/AdminPlaces.jsx";
 import AdminBooking from "./pages/admin/AdminBookings.jsx";
 import AdminViewPlace from "./pages/admin/AdminViewPlace.jsx";
@@ -28,6 +27,7 @@ import EditProfile from "./pages/EditProfile.jsx";
 import ViewAdminBooking from "./pages/admin/ViewAdminBooking.jsx";
 import Payment from "./pages/Payment.jsx";
 import PaymentSuccess from "./pages/PaymentSuccess.jsx";
+import AdminLayout from "./pages/admin/AdminLayout.jsx";
 
 const App = () => {
 
@@ -35,6 +35,8 @@ const App = () => {
 
   return (
     <Routes>
+
+      {/* User Dashboard  */}
       <Route path="/" element={<Layout />}>
         <Route path="*" element={<NotFound />} />
         <Route
@@ -109,16 +111,8 @@ const App = () => {
           </PrivateRoute>
         } />
 
-        <Route path="/admin/dashboard" element={
-          <PrivateRoute allowedRoles={["admin"]}>
-            <AdminDashboard />
-          </PrivateRoute>
-        } />
-
-
-
         <Route path="/account/profile" element={
-          <PrivateRoute allowedRoles={["user", "admin"]}>
+          <PrivateRoute allowedRoles={["user"]}>
             <MyProfile />
           </PrivateRoute>
         } />
@@ -135,8 +129,6 @@ const App = () => {
           </PrivateRoute>
         } />
 
-
-
         <Route path="/account/bookings" element={
           <PrivateRoute allowedRoles={["user", "admin"]}>
             <MyBooking />
@@ -149,54 +141,58 @@ const App = () => {
           </PrivateRoute>
         } />
 
-        <Route path="/admin/profile" element={
+      </Route>
+
+
+      {/* Admin Dashboard  */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="dashboard" element={
+          <PrivateRoute allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </PrivateRoute>
+        } />
+
+        <Route path="profile" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <MyProfile />
           </PrivateRoute>
         } />
 
-        <Route path="/admin/users" element={
-          <PrivateRoute allowedRoles={["admin"]} >
-            <AdminUsers />
-          </PrivateRoute>
-        } />
-
-        <Route path="/admin/places" element={
+        <Route path="places" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <AdminPlaces />
           </PrivateRoute>
         } />
 
-        <Route path="/admin/places/:id" element={
+        <Route path="places/:id" element={
           <PrivateRoute allowedRoles={["admin"]}>
             <AdminViewPlace />
           </PrivateRoute>
         } />
 
-        <Route path="/admin/bookings" element={
+        <Route path="bookings" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <AdminBooking />
           </PrivateRoute>
         } />
 
-        <Route path="/admin/bookings/:id" element={
+        <Route path="bookings/:id" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <ViewAdminBooking />
           </PrivateRoute>
         } />
 
-        <Route path="/admin/reviews" element={
+        <Route path="reviews" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <AdminReviews />
           </PrivateRoute>
         } />
 
-        <Route path="/admin/places/new" element={
+        <Route path="places/new" element={
           <PrivateRoute allowedRoles={["admin"]} >
             <AddPlace />
           </PrivateRoute>
         } />
-
       </Route>
     </Routes>
   );
