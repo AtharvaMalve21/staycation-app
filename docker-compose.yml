@@ -3,15 +3,16 @@ services:
     build: ./server
     ports:
       - "8080:8080"
-    environment:
-      - MONGODB_URI=mongodb+srv://atharvam2103:SZfAJ9kiP1jBbgbz@cluster0.omgi8fp.mongodb.net/airbnb_db
-      - CLIENT_URI=http://localhost:5174
+    env_file: 
+      - ./server/.env
     restart: always
 
   frontend:
     build: ./client
     ports:
-      - "5174:5173"
+      - "5173:5173"
+    env_file: 
+      - ./client/.env
     depends_on:
       - backend
     restart: always
