@@ -1,0 +1,17 @@
+services:
+  backend:
+    build: ./server
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGODB_URI=mongodb+srv://atharvam2103:SZfAJ9kiP1jBbgbz@cluster0.omgi8fp.mongodb.net/airbnb_db
+      - CLIENT_URI=http://localhost:5174
+    restart: always
+
+  frontend:
+    build: ./client
+    ports:
+      - "5174:5173"
+    depends_on:
+      - backend
+    restart: always
